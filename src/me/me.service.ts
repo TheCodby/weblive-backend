@@ -4,6 +4,9 @@ import * as bcrypt from 'bcrypt';
 import { RequestWithUser } from 'src/interfaces/user';
 import prisma from '@/prisma';
 import { UpdateProfileDto } from './dto/UpdateProfile.dto';
+import * as fs from 'fs';
+import { randomBytes, randomUUID } from 'crypto';
+import { join } from 'path';
 @Injectable()
 export class MeService {
   async getProfile(request: RequestWithUser) {
@@ -81,7 +84,33 @@ export class MeService {
         message: 'Successfully updated profile',
       };
     } catch (e) {
+      if (e.code === 'P2002') {
+        throw new HttpException(
+          'Username already exists',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
+  }
+  async updateProfilePicture(
+    file: Express.Multer.File,
+    request: RequestWithUser,
+  ) {
+    const filename = file.originalname;
+    const filepath = join(__dirname, '../../..', `public`, `${filename}`);
+    fs.writeFileSync(filepath, file.buffer, { flag: 'a' });
+    await prisma.user.update({
+      where: {
+        id: request.user.id,
+      },
+      data: {
+        avatar: '/public/' + filename,
+      },
+    });
+    return {
+      message: 'Successfully uploaded',
+      image_url: '/public/' + filename,
+    };
   }
 }

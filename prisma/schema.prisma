@@ -13,12 +13,30 @@ model User{
   password String
   ip String?
   bio String?
-  avatar String?
+  avatar String @default("/public/default.jpg")
   last_login DateTime?
+  rooms Room[]
   created_at DateTime @default(now())
+  joinedRooms UserRoom[]
 }
 model Room{
   id Int @id @default(autoincrement())
-  room_name String @unique
+  name String @unique
+  password String?
+  type Int @default(0) // 0: public, 1: private
+  description String?
+  ownerId Int
+  capacity Int @default(10)
+  owner User @relation(fields: [ownerId], references: [id])
+  status Int @default(1) // 0: inactive, 1: active
+  created_at DateTime @default(now())
+  users UserRoom[]
+}
+model UserRoom{
+  id Int @id @default(autoincrement())
+  userId Int
+  roomId Int
+  user User @relation(fields: [userId], references: [id])
+  room Room @relation(fields: [roomId], references: [id])
   created_at DateTime @default(now())
 }

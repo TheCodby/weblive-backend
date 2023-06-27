@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 var cors = require('cors');
 var corsOptions = {
-  // change it to website you wish to allow
   origin: '*',
 };
 async function bootstrap() {

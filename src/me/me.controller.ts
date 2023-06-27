@@ -6,9 +6,12 @@ import {
   Req,
   UseGuards,
   UsePipes,
+  Post,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
 } from '@nestjs/common';
 import { MeService } from './me.service';
-import { Request } from 'express';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { JoiValidationPipe } from 'src/validation/JoiValidationPipe';
 import {
@@ -17,6 +20,8 @@ import {
 } from './dto/ChangePassword.dto';
 import { RequestWithUser } from 'src/interfaces/user';
 import { UpdateProfileDto, updateProfileSchema } from './dto/UpdateProfile.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FileSizeValidator } from '../validation/upload/FileSizeValidator';
 
 @Controller('me')
 @UseGuards(AuthGuard)
@@ -42,5 +47,18 @@ export class MeController {
     @Req() request: RequestWithUser,
   ) {
     return this.meService.updateProfile(updateProfileDto, request);
+  }
+  @Post('picture')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadPicture(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new FileSizeValidator({ maxSize: 50000 })],
+      }),
+    )
+    file: Express.Multer.File,
+    @Req() request: RequestWithUser,
+  ) {
+    return this.meService.updateProfilePicture(file, request);
   }
 }

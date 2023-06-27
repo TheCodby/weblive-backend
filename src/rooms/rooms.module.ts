@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { LivesService } from './lives.service';
-import { LivesController } from './lives.controller';
+import { RoomsService } from './rooms.service';
+import { RoomsController } from './rooms.controller';
 import { JwtModule } from '@nestjs/jwt';
+
 @Module({
   imports: [
     JwtModule.register({
@@ -9,7 +10,7 @@ import { JwtModule } from '@nestjs/jwt';
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  controllers: [LivesController],
-  providers: [LivesService],
+  controllers: [RoomsController],
+  providers: [RoomsService],
 })
-export class LivesModule {}
+export class RoomsModule {}
