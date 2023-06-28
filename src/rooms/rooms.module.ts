@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { RoomsController } from './rooms.controller';
 import { JwtModule } from '@nestjs/jwt';
+import { RoomGateway } from './room.gateway';
 
 @Module({
   imports: [
@@ -11,6 +12,6 @@ import { JwtModule } from '@nestjs/jwt';
     }),
   ],
   controllers: [RoomsController],
-  providers: [RoomsService],
+  providers: [RoomsService, RoomGateway],
 })
 export class RoomsModule {}

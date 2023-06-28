@@ -49,6 +49,7 @@ export class RoomsService {
           owner: {
             select: {
               username: true,
+              avatar: true,
             },
           },
         },

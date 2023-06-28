@@ -15,7 +15,7 @@ import { RoomsService } from './rooms.service';
 import { CreateRoomDto, createRoomSchema } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { RequestWithUser } from '../interfaces/user';
-import { AuthGuard } from '../auth/auth.guard';
+import { AuthGuard } from '../utils/guards/auth.guard';
 import { JoiValidationPipe } from '../validation/JoiValidationPipe';
 
 @Controller('rooms')
