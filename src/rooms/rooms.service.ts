@@ -8,9 +8,11 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import prisma from '@/prisma';
 import { RequestWithUser } from '../interfaces/user';
+import { RoomGateway } from './room.gateway';
 
 @Injectable()
 export class RoomsService {
+  constructor(private readonly roomGateway: RoomGateway) {}
   async create(createRoomDto: CreateRoomDto, request: RequestWithUser) {
     try {
       const { roomName, roomPassword, roomDescription, passwordProtected } =
@@ -37,9 +39,9 @@ export class RoomsService {
     }
   }
 
-  findAll(page: number) {
+  async findAll(page: number) {
     try {
-      const rooms = prisma.room.findMany({
+      const rooms = await prisma.room.findMany({
         select: {
           id: true,
           name: true,
@@ -56,12 +58,17 @@ export class RoomsService {
         take: 10,
         skip: (page - 1) * 10,
       });
+      const onlineUsersInRooms = this.roomGateway.getRoomsWithUserCounts(
+        rooms.map((room) => room.id.toString()),
+      );
+      rooms.forEach((room) => {
+        room['onlineUsers'] = onlineUsersInRooms[room.id.toString()] || 0;
+      });
       return rooms;
     } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-
   async findOne(id: number) {
     try {
       const room = await prisma.room.findUnique({

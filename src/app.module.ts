@@ -6,6 +6,7 @@ import { MeModule } from './me/me.module';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { RoomsModule } from './rooms/rooms.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -19,6 +20,10 @@ import { RoomsModule } from './rooms/rooms.module';
       },
     }),
     RoomsModule,
+    ThrottlerModule.forRoot({
+      ttl: 60,
+      limit: 10,
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
