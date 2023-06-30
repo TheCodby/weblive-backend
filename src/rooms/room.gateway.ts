@@ -11,6 +11,8 @@ import { WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { RoomAuthGuard } from '../utils/guards/room-auth.guard';
 import { JwtService } from '@nestjs/jwt';
+import prisma from '@/prisma';
+import { RoomOwnerGuard } from '../utils/guards/room-owner.guard';
 @WebSocketGateway({ cors: '*:*' })
 @UseGuards(RoomAuthGuard)
 export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -60,6 +62,7 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
   handleDisconnect(@ConnectedSocket() client: Socket) {
     this.server.to(client.handshake.query['roomId']).emit('leftRoom', {
+      senderId: client.handshake.query['userId'],
       sender: client.handshake.query['username'],
       picture: client.handshake.query['picture'],
     });
@@ -71,5 +74,99 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
 
     return roomCounts;
+  }
+  async getRoomOwner(
+    @ConnectedSocket() client: Socket,
+  ): Promise<Socket | false> {
+    const roomId = client.handshake.query['roomId'] as string;
+    const roomOwner = await prisma.room.findUnique({
+      where: { id: parseInt(roomId) },
+      select: { ownerId: true },
+    });
+    const sockets = this.server.sockets.adapter.rooms.get(roomId);
+    if (sockets) {
+      for (const socketId of sockets) {
+        const socket = this.server.sockets.sockets.get(socketId);
+        const userId = socket.handshake.query['userId'] as string;
+        if (parseInt(userId) === roomOwner.ownerId) {
+          return socket;
+        }
+      }
+    }
+    return false;
+  }
+  getUserInRoom(
+    @ConnectedSocket() client: Socket,
+    userId: string,
+  ): Socket | false {
+    const roomId = client.handshake.query['roomId'] as string;
+    const sockets = this.server.sockets.adapter.rooms.get(roomId);
+    if (sockets) {
+      for (const socketId of sockets) {
+        const socket = this.server.sockets.sockets.get(socketId);
+        const socketUserId = socket.handshake.query['userId'] as string;
+        if (socketUserId === userId) {
+          return socket;
+        }
+      }
+    }
+    return false;
+  }
+  @UseGuards(RoomAuthGuard)
+  @SubscribeMessage('receiveLive')
+  async handleReceiveLive(@ConnectedSocket() client: Socket): Promise<void> {
+    const roomOwner = await this.getRoomOwner(client);
+    if (!roomOwner) {
+      client.emit('liveOffline');
+      return;
+    }
+    console.log('userRequestLive emited ' + client.handshake.query['userId']);
+    roomOwner.emit('userRequestLive', client.handshake.query['userId']);
+  }
+  @UseGuards(RoomOwnerGuard)
+  @SubscribeMessage('candidate')
+  handleCandidate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: any,
+  ): void {
+    const clientSocket = this.getUserInRoom(client, body.to);
+    if (!clientSocket) return;
+    console.log('candidate emited ' + client.handshake.query['userId']);
+    clientSocket.emit('candidate', body.candidate);
+  }
+  @UseGuards(RoomOwnerGuard)
+  @SubscribeMessage('live')
+  handleLive(@ConnectedSocket() client: Socket): void {
+    this.server.to(client.handshake.query['roomId']).emit('liveStarted');
+  }
+  @UseGuards(RoomOwnerGuard)
+  @SubscribeMessage('stopLive')
+  handleStopLive(@ConnectedSocket() client: Socket): void {
+    this.server.to(client.handshake.query['roomId']).emit('liveStopped');
+  }
+  @UseGuards(RoomOwnerGuard)
+  @SubscribeMessage('offer')
+  handleOffer(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: any,
+  ): void {
+    const clientSocket = this.getUserInRoom(client, body.to);
+    if (!clientSocket) return;
+    console.log('offer emited  ' + client.handshake.query['userId']);
+    clientSocket.emit('offer', body.offer);
+  }
+  @UseGuards(RoomAuthGuard)
+  @SubscribeMessage('answer')
+  async handleAnswer(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() answer: any,
+  ): Promise<void> {
+    const roomOwner = await this.getRoomOwner(client);
+    if (!roomOwner) return;
+    console.log('answer emited  ' + client.handshake.query['userId']);
+    roomOwner.emit('answer', {
+      body: answer,
+      sender: client.handshake.query['userId'],
+    });
   }
 }
