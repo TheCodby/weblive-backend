@@ -32,29 +32,32 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
-  handleConnection(@ConnectedSocket() client: Socket) {
+  async handleConnection(@ConnectedSocket() client: Socket) {
     try {
       client.leave(client.rooms.values().next().value); // remove from default room (socket.id)
       const roomId: string = client.handshake.query['roomId'] as string;
       const token = client.handshake.auth['token'];
-      const user = this.jwtService.verify(token);
-      client.handshake.query['userId'] = user.id;
+      const user = await prisma.user.findUnique({
+        where: { id: this.jwtService.verify(token)['id'] },
+        select: { id: true, username: true, avatar: true },
+      });
+      client.handshake.query['userId'] = user.id.toString();
       client.handshake.query['username'] = user.username;
-      client.handshake.query['picture'] = user.picture;
+      client.handshake.query['picture'] = user.avatar;
       // remove user from room if already exists
       // loop sockets in room and check if user exists
       const sockets = this.server.sockets.adapter.rooms.get(roomId);
       if (sockets) {
         sockets.forEach((socketId: string) => {
           const socket = this.server.sockets.sockets.get(socketId);
-          if (socket.handshake.query['userId'] === user.id) {
+          if (socket.handshake.query['userId'] === user.id.toString()) {
             socket.disconnect();
           }
         });
       }
       client.join(roomId);
       this.server.to(roomId).emit('joinedRoom', {
-        picture: user.picture,
+        picture: user.avatar,
         sender: user.username,
       });
     } catch (err) {

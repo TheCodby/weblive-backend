@@ -7,5 +7,5 @@ export class UpdateProfileDto {
 
 export const updateProfileSchema = Joi.object<UpdateProfileDto>({
   username: Joi.string().required().label('Username'),
-  bio: Joi.string().allow('').label('Bio'),
+  bio: Joi.string().allow('', null).empty().label('Bio'),
 });
