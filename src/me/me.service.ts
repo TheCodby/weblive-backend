@@ -4,9 +4,9 @@ import * as bcrypt from 'bcrypt';
 import { RequestWithUser } from 'src/interfaces/user';
 import prisma from '@/prisma';
 import { UpdateProfileDto } from './dto/UpdateProfile.dto';
-import * as fs from 'fs';
 import { randomBytes, randomUUID } from 'crypto';
-import { join } from 'path';
+import { s3Client } from '../utils/aws-s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 @Injectable()
 export class MeService {
   async getProfile(request: RequestWithUser) {
@@ -97,20 +97,27 @@ export class MeService {
     file: Express.Multer.File,
     request: RequestWithUser,
   ) {
-    const filename = file.originalname;
-    const filepath = join(__dirname, '../../..', `public`, `${filename}`);
-    fs.writeFileSync(filepath, file.buffer, { flag: 'a' });
+    const filename = randomUUID() + randomBytes(5).toString('hex') + '.jpg';
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: 'weblive-1',
+        Key: filename,
+        Body: file.buffer,
+        ContentEncoding: 'base64',
+        ContentType: 'image/jpeg',
+      }),
+    );
     await prisma.user.update({
       where: {
         id: request.user.id,
       },
       data: {
-        avatar: '/public/' + filename,
+        avatar: filename,
       },
     });
     return {
       message: 'Successfully uploaded',
-      image_url: '/public/' + filename,
+      image_url: filename,
     };
   }
 }
