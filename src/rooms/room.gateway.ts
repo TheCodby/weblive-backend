@@ -16,6 +16,7 @@ import { RoomOwnerGuard } from '../utils/guards/room-owner.guard';
 @WebSocketGateway({ cors: '*:*' })
 @UseGuards(RoomAuthGuard)
 export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  private onlineLiveRooms: Set<string> = new Set<string>();
   constructor(private readonly jwtService: JwtService) {}
   @WebSocketServer()
   server: Server;
@@ -115,8 +116,9 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @UseGuards(RoomAuthGuard)
   @SubscribeMessage('receiveLive')
   async handleReceiveLive(@ConnectedSocket() client: Socket): Promise<void> {
+    const roomId = client.handshake.query['roomId'] as string;
     const roomOwner = await this.getRoomOwner(client);
-    if (!roomOwner) {
+    if (!roomOwner || !this.onlineLiveRooms.has(roomId)) {
       client.emit('liveOffline');
       return;
     }
@@ -137,11 +139,16 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @UseGuards(RoomOwnerGuard)
   @SubscribeMessage('live')
   handleLive(@ConnectedSocket() client: Socket): void {
+    const roomId = client.handshake.query['roomId'] as string;
+    if (this.onlineLiveRooms.has(roomId)) return;
+    this.onlineLiveRooms.add(roomId);
     this.server.to(client.handshake.query['roomId']).emit('liveStarted');
   }
   @UseGuards(RoomOwnerGuard)
   @SubscribeMessage('stopLive')
   handleStopLive(@ConnectedSocket() client: Socket): void {
+    const roomId = client.handshake.query['roomId'] as string;
+    this.onlineLiveRooms.delete(roomId);
     this.server.to(client.handshake.query['roomId']).emit('liveStopped');
   }
   @UseGuards(RoomOwnerGuard)
