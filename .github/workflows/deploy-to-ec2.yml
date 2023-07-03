@@ -23,12 +23,14 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
 
               # Now we have got the access of EC2 and we will start the deploy .
-              sudo pm2 delete all &&
-              sudo rm -r /home/ubuntu/weblive-backend &&
+              sudo rm -f /home/ubuntu/weblive-backend &&
               git clone https://github.com/TheCodby/weblive-backend.git
               cd /home/ubuntu/weblive-backend &&
               sudo npm i &&
               sudo npx prisma generate &&
               sudo npm run build &&
-              sudo npm run start:prod
+              sudo pm2 stop ./dist/src/main.js &&
+              sudo pm2 delete all &&
+              sudo npm run start:prod &&
+              exit
               '
