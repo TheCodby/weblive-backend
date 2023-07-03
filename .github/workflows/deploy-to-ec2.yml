@@ -29,6 +29,6 @@ jobs:
               sudo npm i &&
               sudo npx prisma generate &&
               sudo npm run build &&
-              sudo pm2 stop ./dist/src/main.js &&
-              sudo pm2 start ./dist/src/main.js
+              sudo pm2 delete all &&
+              sudo npm run start:prod
               '
