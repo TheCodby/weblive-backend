@@ -28,13 +28,12 @@ jobs:
             fi
             sudo git clone https://github.com/TheCodby/weblive-backend.git
             cd /home/ubuntu/weblive-backend &&
-            sudo touch .env
-            sudo echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env &&
-            sudo echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env  &&
-            sudo echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env  &&
-            sudo echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env  &&
-            sudo echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env  &&
-            sudo cat .env &&
+            sudo echo "${{ secrets.ENV_FILE }}" > .env
+            sudo npm i -g npm &&
+            sudo npm i -g ts-node &&
+            sudo npm i -g typescript &&
+            sudo npm i -g prisma &&
+            sudo npm i -g pm2 &&
             sudo npm i &&
             sudo npx prisma generate &&
             sudo npx prisma db push &&
