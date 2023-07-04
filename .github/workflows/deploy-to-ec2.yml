@@ -27,6 +27,7 @@ jobs:
               sudo rm -rf /home/ubuntu/weblive-backend
             fi
             sudo git clone https://github.com/TheCodby/weblive-backend.git
+            sudo chmod 777 /home/ubuntu/weblive-backend &&
             cd /home/ubuntu/weblive-backend &&
             sudo echo "${{ secrets.ENV_FILE }}" > .env
             sudo npm i -g npm &&
