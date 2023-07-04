@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { HttpException } from '@nestjs/common';
 const corsOptions = {
   origin: (origin, callback) => {
-    if (process.env.ORIGIN === origin) {
+    if (process.env.ORIGIN === origin || !origin) {
       callback(null, true);
     } else {
       callback(new HttpException('Origin not allowed by CORS', 403));
