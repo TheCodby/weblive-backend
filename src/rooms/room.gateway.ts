@@ -143,6 +143,7 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('live')
   handleLive(@ConnectedSocket() client: Socket): void {
     const roomId = client.handshake.query['roomId'] as string;
+    console.log('live emited ' + client.handshake.query['userId']);
     if (this.onlineLiveRooms.has(roomId)) return;
     this.onlineLiveRooms.add(roomId);
     this.server.to(client.handshake.query['roomId']).emit('liveStarted');
