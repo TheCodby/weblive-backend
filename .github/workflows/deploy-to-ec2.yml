@@ -35,7 +35,6 @@ jobs:
             echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env  &&
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env  &&
             sudo cat .env &&
-            sudo chown $USER_NAME:$USER_NAME .env &&
             sudo npm i &&
             sudo npx prisma generate &&
             sudo npx prisma db push &&
