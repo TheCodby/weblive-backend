@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 var cors = require('cors');
 var corsOptions = {
-  origin: '*',
+  origin: process.env.ORIGIN,
 };
 
 async function bootstrap() {
