@@ -1,9 +1,4 @@
-import {
-  BadGatewayException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import prisma from '@/prisma';
@@ -71,7 +66,7 @@ export class RoomsService {
   }
   async findOne(id: number) {
     try {
-      const room = await prisma.room.findUnique({
+      const room = await prisma.room.findUniqueOrThrow({
         where: {
           id,
         },
@@ -90,6 +85,10 @@ export class RoomsService {
       }
       return room;
     } catch (e: any) {
+      console.log(e);
+      if (e.code === 'P2025') {
+        throw new HttpException('Room not found', HttpStatus.NOT_FOUND);
+      }
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }

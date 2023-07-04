@@ -19,10 +19,9 @@ import { AuthGuard } from '../utils/guards/auth.guard';
 import { JoiValidationPipe } from '../validation/JoiValidationPipe';
 
 @Controller('rooms')
-@UseGuards(AuthGuard)
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
-
+  @UseGuards(AuthGuard)
   @Post()
   @UsePipes(new JoiValidationPipe(createRoomSchema))
   create(
@@ -31,6 +30,8 @@ export class RoomsController {
   ) {
     return this.roomsService.create(createRoomDto, request);
   }
+
+  @UseGuards(AuthGuard)
   @Post('/:id/join')
   join(
     @Param('id') id: string,
@@ -41,20 +42,24 @@ export class RoomsController {
   }
 
   @Get()
+  @UseGuards()
   findAll(@Query('page') page: number = 1) {
     return this.roomsService.findAll(page);
   }
 
+  @UseGuards(AuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.roomsService.findOne(+id);
   }
 
+  @UseGuards(AuthGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateRoomDto: UpdateRoomDto) {
     return this.roomsService.update(+id, updateRoomDto);
   }
 
+  @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.roomsService.remove(+id);
