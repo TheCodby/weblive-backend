@@ -15,27 +15,28 @@ jobs:
       - name: Build & Deploy
         env:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          HOSTNAME: ${{secrets.SSH_HOST}}
-          USER_NAME: ${{secrets.USER_NAME}}
+          HOSTNAME: ${{ secrets.SSH_HOST }}
+          USER_NAME: ${{ secrets.USER_NAME }}
 
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
 
-              # Now we have got the access of EC2 and we will start the deploy .
-              sudo rm -f -r /home/ubuntu/weblive-backend &&
-              sudo git clone https://github.com/TheCodby/weblive-backend.git
-              cd /home/ubuntu/weblive-backend &&
-              sudo echo "DATABASE_URL='${{ secrets.DATABASE_URL }}'" > .env &&
-              sudo echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env &&
-              sudo echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env &&
-              sudo echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env &&
-              sudo echo "AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}'" >> .env &&
-              sudo npm i &&
-              sudo npx prisma generate &&
-              sudo npx prisma db push &&
-              sudo npm run build &&
-              sudo pm2 delete all &&
-              sudo npm run start:prod &&
-              exit
-              '
+            # Now we have got access to EC2 and we will start the deployment.
+            sudo rm -f -r /home/ubuntu/weblive-backend &&
+            sudo git clone https://github.com/TheCodby/weblive-backend.git
+            cd /home/ubuntu/weblive-backend &&
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" | sudo tee .env > /dev/null &&
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" | sudo tee -a .env > /dev/null &&
+            echo "AWS_REGION=${{ secrets.AWS_REGION }}" | sudo tee -a .env > /dev/null &&
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" | sudo tee -a .env > /dev/null &&
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" | sudo tee -a .env > /dev/null &&
+            sudo chown $USER_NAME:$USER_NAME .env &&
+            sudo npm i &&
+            sudo npx prisma generate &&
+            sudo npx prisma db push &&
+            sudo npm run build &&
+            sudo pm2 delete all &&
+            sudo npm run start:prod &&
+            exit
+          '
