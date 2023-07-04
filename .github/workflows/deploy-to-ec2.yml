@@ -40,6 +40,5 @@ jobs:
             sudo npx prisma db push &&
             sudo npm run build &&
             sudo pm2 delete all &&
-            sudo npm run start:prod 
-            2>&1
+            sudo npm run start:prod
           '
