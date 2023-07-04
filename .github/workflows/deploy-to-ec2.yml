@@ -23,7 +23,9 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
 
             # Now we have got access to EC2 and we will start the deployment.
-            sudo rm -f -r /home/ubuntu/weblive-backend &&
+            if [ -d "/home/ubuntu/weblive-backend" ]; then
+              sudo rm -rf /home/ubuntu/weblive-backend
+            fi
             sudo git clone https://github.com/TheCodby/weblive-backend.git
             cd /home/ubuntu/weblive-backend &&
             echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" | sudo tee .env > /dev/null &&
