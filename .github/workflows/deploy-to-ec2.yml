@@ -40,5 +40,5 @@ jobs:
             sudo npx prisma db push &&
             sudo npm run build &&
             pm2 delete all &&
-            pm2 start dist/src/main.js --name weblive-backend
+            pm2 start dist/main.js --name weblive-backend
           '
