@@ -1,23 +1,25 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
-import prisma from '@/prisma';
 import { RequestWithUser } from '../interfaces/user';
 import { RoomGateway } from './room.gateway';
+import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
 export class RoomsService {
-  constructor(private readonly roomGateway: RoomGateway) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly roomGateway: RoomGateway,
+  ) {}
   async create(createRoomDto: CreateRoomDto, request: RequestWithUser) {
     try {
-      const { roomName, roomPassword, roomDescription, passwordProtected } =
-        createRoomDto;
-      const newRoom = await prisma.room.create({
+      const { name, password, description, password_protected } = createRoomDto;
+      const newRoom = await this.prisma.room.create({
         data: {
-          name: roomName,
-          password: passwordProtected ? roomPassword : null,
-          description: roomDescription,
-          type: passwordProtected ? 1 : 0,
+          name: name,
+          password: password_protected ? password : null,
+          description: description,
+          type: password_protected ? 1 : 0,
           owner: {
             connect: {
               id: request.user.id,
@@ -36,7 +38,7 @@ export class RoomsService {
 
   async findAll(page: number) {
     try {
-      const rooms = await prisma.room.findMany({
+      const rooms = await this.prisma.room.findMany({
         select: {
           id: true,
           name: true,
@@ -53,12 +55,15 @@ export class RoomsService {
         take: 10,
         skip: (page - 1) * 10,
       });
-      const onlineUsersInRooms = this.roomGateway.getRoomsWithUserCounts(
-        rooms.map((room) => room.id.toString()),
-      );
-      rooms.forEach((room) => {
-        room['onlineUsers'] = onlineUsersInRooms[room.id.toString()] || 0;
-      });
+      // If server is running, get online users in each room
+      if (this.roomGateway.server) {
+        const onlineUsersInRooms = this.roomGateway.getRoomsWithUserCounts(
+          rooms.map((room) => room.id.toString()),
+        );
+        rooms.forEach((room) => {
+          room['onlineUsers'] = onlineUsersInRooms[room.id.toString()] || 0;
+        });
+      }
       return rooms;
     } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
@@ -66,12 +71,12 @@ export class RoomsService {
   }
   async findOne(id: number) {
     try {
-      const room = await prisma.room.findUniqueOrThrow({
+      const room = await this.prisma.room.findUniqueOrThrow({
         where: {
           id,
         },
       });
-      const userJoined = await prisma.userRoom.findFirst({
+      const userJoined = await this.prisma.userRoom.findFirst({
         where: {
           userId: 1,
           roomId: id,
@@ -93,12 +98,33 @@ export class RoomsService {
     }
   }
 
-  update(id: number, updateRoomDto: UpdateRoomDto) {
-    return `This action updates a #${id} room`;
+  async update(id: number, updateRoomDto: UpdateRoomDto) {
+    try {
+      const room = await this.prisma.room.update({
+        where: {
+          id,
+        },
+        data: {
+          name: updateRoomDto.name,
+          description: updateRoomDto.description,
+          password: updateRoomDto.password_protected
+            ? updateRoomDto.password
+            : null,
+
+          type: updateRoomDto.password_protected ? 1 : 0,
+        },
+      });
+      return {
+        message: 'Room updated successfully',
+        room,
+      };
+    } catch (e: any) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
   }
   async join(id: string, password: string, request: RequestWithUser) {
     try {
-      const room = await prisma.room.findUnique({
+      const room = await this.prisma.room.findUnique({
         where: {
           id: parseInt(id),
         },
@@ -109,7 +135,7 @@ export class RoomsService {
       if (room.type === 1 && room.password !== password) {
         throw new HttpException('Wrong password', HttpStatus.BAD_REQUEST);
       }
-      const userRoom = await prisma.userRoom.findFirst({
+      const userRoom = await this.prisma.userRoom.findFirst({
         where: {
           userId: request.user.id,
           roomId: parseInt(id),
@@ -121,7 +147,7 @@ export class RoomsService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      await prisma.userRoom.create({
+      await this.prisma.userRoom.create({
         data: {
           userId: request.user.id,
           roomId: parseInt(id),

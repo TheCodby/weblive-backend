@@ -11,13 +11,16 @@ import { WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { RoomAuthGuard } from '../utils/guards/room-auth.guard';
 import { JwtService } from '@nestjs/jwt';
-import prisma from '@/prisma';
 import { RoomOwnerGuard } from '../utils/guards/room-owner.guard';
+import { PrismaService } from '../database/prisma.service';
 @WebSocketGateway({ cors: '*:*' })
 @UseGuards(RoomAuthGuard)
 export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
   private onlineLiveRooms: Set<string> = new Set<string>();
-  constructor(private readonly jwtService: JwtService) {}
   @WebSocketServer()
   server: Server;
   @SubscribeMessage('sendMessage')
@@ -37,7 +40,7 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.leave(client.rooms.values().next().value); // remove from default room (socket.id)
       const roomId: string = client.handshake.query['roomId'] as string;
       const token = client.handshake.auth['token'];
-      const user = await prisma.user.findUnique({
+      const user = await this.prisma.user.findUnique({
         where: { id: this.jwtService.verify(token)['id'] },
         select: { id: true, username: true, avatar: true },
       });
@@ -83,7 +86,7 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
   ): Promise<Socket | false> {
     const roomId = client.handshake.query['roomId'] as string;
-    const roomOwner = await prisma.room.findUnique({
+    const roomOwner = await this.prisma.room.findUnique({
       where: { id: parseInt(roomId) },
       select: { ownerId: true },
     });

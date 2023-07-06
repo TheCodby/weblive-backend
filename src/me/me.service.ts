@@ -2,15 +2,17 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ChangePasswordDto } from './dto/ChangePassword.dto';
 import * as bcrypt from 'bcrypt';
 import { RequestWithUser } from 'src/interfaces/user';
-import prisma from '@/prisma';
 import { UpdateProfileDto } from './dto/UpdateProfile.dto';
 import { randomBytes, randomUUID } from 'crypto';
 import { s3Client } from '../utils/aws-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { PrismaService } from '../database/prisma.service';
 @Injectable()
 export class MeService {
+  constructor(private readonly prisma: PrismaService) {}
+
   async getProfile(request: RequestWithUser) {
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         id: request.user.id,
       },
@@ -29,7 +31,7 @@ export class MeService {
     request: RequestWithUser,
   ) {
     try {
-      const userData = await prisma.user.findUnique({
+      const userData = await this.prisma.user.findUnique({
         where: {
           id: request.user.id,
         },
@@ -51,7 +53,7 @@ export class MeService {
       }
       const salt = bcrypt.genSaltSync(5);
       const hashedPassword = await bcrypt.hash(newPassword, salt);
-      await prisma.user.update({
+      await this.prisma.user.update({
         where: {
           id: request.user.id,
         },
@@ -71,7 +73,7 @@ export class MeService {
     request: RequestWithUser,
   ) {
     try {
-      await prisma.user.update({
+      await this.prisma.user.update({
         where: {
           id: request.user.id,
         },
@@ -107,7 +109,7 @@ export class MeService {
         ContentType: 'image/jpeg',
       }),
     );
-    await prisma.user.update({
+    await this.prisma.user.update({
       where: {
         id: request.user.id,
       },

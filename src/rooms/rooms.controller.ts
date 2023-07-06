@@ -17,6 +17,7 @@ import { UpdateRoomDto } from './dto/update-room.dto';
 import { RequestWithUser } from '../interfaces/user';
 import { AuthGuard } from '../utils/guards/auth.guard';
 import { JoiValidationPipe } from '../validation/JoiValidationPipe';
+import { RoomOwnerGuard } from '../utils/guards/room-owner.guard';
 
 @Controller('rooms')
 export class RoomsController {
@@ -53,7 +54,7 @@ export class RoomsController {
     return this.roomsService.findOne(+id);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RoomOwnerGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateRoomDto: UpdateRoomDto) {
     return this.roomsService.update(+id, updateRoomDto);

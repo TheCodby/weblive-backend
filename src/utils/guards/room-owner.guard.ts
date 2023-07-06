@@ -1,18 +1,24 @@
-import prisma from '@/prisma';
+import { PrismaService } from '../../database/prisma.service';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class RoomOwnerGuard implements CanActivate {
+  constructor(private readonly prisma: PrismaService) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const userId = parseInt(
-      context.switchToWs().getClient().handshake.query['userId'],
-    );
-    const roomId = context.switchToWs().getClient().handshake.query['roomId'];
-    const roomOwner = await prisma.room.findUnique({
-      where: { id: parseInt(roomId) },
-      select: { ownerId: true },
+    let roomId: number;
+    let userId: number;
+    // check if the request is coming from a websocket or http request
+    if (context.getType() === 'ws') {
+      userId = +context.switchToWs().getClient().handshake.query['userId'];
+      roomId = context.switchToWs().getClient().handshake.query['roomId'];
+    } else if (context.getType() === 'http') {
+      userId = +context.switchToHttp().getRequest().user.id;
+      roomId = +context.switchToHttp().getRequest().params.id;
+    }
+    const roomOwner = await this.prisma.room.findFirstOrThrow({
+      where: { id: roomId, ownerId: userId },
     });
-    if (roomOwner.ownerId != userId) return false;
-    return true;
+    return roomOwner ? true : false;
   }
 }

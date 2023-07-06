@@ -4,15 +4,18 @@ import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt/dist';
 import { User } from 'src/interfaces/user';
-import prisma from '@/prisma';
+import { PrismaService } from '../database/prisma.service';
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
   async create(createAuthDto: UserAuthDto) {
     try {
       const salt = bcrypt.genSaltSync(5);
       const hashedPassword = await bcrypt.hash(createAuthDto.password, salt);
-      await prisma.user.create({
+      await this.prisma.user.create({
         data: {
           username: createAuthDto.username,
           password: hashedPassword,
@@ -35,7 +38,7 @@ export class AuthService {
     }
   }
   async login(loginAuthDto: UserAuthDto) {
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         username: loginAuthDto.username,
       },
