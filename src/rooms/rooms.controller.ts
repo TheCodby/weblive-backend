@@ -39,7 +39,7 @@ export class RoomsController {
     @Body('password') password: string,
     @Req() request: RequestWithUser,
   ) {
-    return this.roomsService.join(id, password, request);
+    return this.roomsService.join(+id, password, request);
   }
 
   @Get()
@@ -60,7 +60,7 @@ export class RoomsController {
     return this.roomsService.update(+id, updateRoomDto);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RoomOwnerGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.roomsService.remove(+id);

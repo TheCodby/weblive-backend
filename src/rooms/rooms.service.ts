@@ -122,11 +122,11 @@ export class RoomsService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-  async join(id: string, password: string, request: RequestWithUser) {
+  async join(id: number, password: string, request: RequestWithUser) {
     try {
       const room = await this.prisma.room.findUnique({
         where: {
-          id: parseInt(id),
+          id: id,
         },
       });
       if (!room) {
@@ -138,7 +138,7 @@ export class RoomsService {
       const userRoom = await this.prisma.userRoom.findFirst({
         where: {
           userId: request.user.id,
-          roomId: parseInt(id),
+          roomId: id,
         },
       });
       if (userRoom) {
@@ -150,7 +150,7 @@ export class RoomsService {
       await this.prisma.userRoom.create({
         data: {
           userId: request.user.id,
-          roomId: parseInt(id),
+          roomId: id,
         },
       });
       return {
@@ -160,7 +160,18 @@ export class RoomsService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-  remove(id: number) {
-    return `This action removes a #${id} room`;
+  async remove(id: number) {
+    try {
+      await this.prisma.room.delete({
+        where: {
+          id,
+        },
+      });
+      return {
+        message: 'Room deleted successfully',
+      };
+    } catch (e: any) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
   }
 }

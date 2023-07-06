@@ -88,11 +88,6 @@ describe('RoomController', () => {
     expect(await controller.findOne(testRoomId.toString())).toMatchObject(room);
   });
   it('PATCH /rooms/:id is working well', async () => {
-    const room = await prisma.room.findUnique({
-      where: {
-        id: testRoomId,
-      },
-    });
     const roomName = randomBytes(10).toString('hex');
     const mockUpdateRoomDto: UpdateRoomDto = {
       name: roomName,
@@ -103,5 +98,8 @@ describe('RoomController', () => {
     expect(
       await controller.update(testRoomId.toString(), mockUpdateRoomDto),
     ).toBeDefined();
+  });
+  it('DELETE /rooms/:id is working well', async () => {
+    expect(await controller.remove(testRoomId.toString())).toBeDefined();
   });
 });
