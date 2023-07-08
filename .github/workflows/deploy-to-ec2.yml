@@ -12,14 +12,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Build & Deploy
+
+      - name: Set up SSH
         env:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key
+          chmod 600 private_key
+      - name: Build & Deploy
+        env:
           HOSTNAME: ${{ secrets.SSH_HOST }}
           USER_NAME: ${{ secrets.USER_NAME }}
 
         run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
 
             # Now we have got access to EC2 and we will start the deployment.
@@ -36,5 +41,5 @@ jobs:
             sudo npx prisma db push 
             sudo npm run build
             pm2 kill
-            pm2 start dist/main.js --name weblive-backend
+            pm2 start dist/src/main.js --name weblive-backend
           '
