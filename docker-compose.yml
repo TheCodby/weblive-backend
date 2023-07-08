@@ -1,0 +1,7 @@
+services:
+  web:
+    env_file:
+      - .env
+    build: .
+    ports:
+      - '80:3000'

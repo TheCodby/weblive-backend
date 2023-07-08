@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserAuthDto } from './dto/user-auth.dto';
-import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt/dist';
 import { User } from 'src/interfaces/user';
@@ -25,13 +24,11 @@ export class AuthService {
         message: 'Successfully created an account',
       };
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        if (e.code === 'P2002') {
-          throw new HttpException(
-            'Username already exists',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
+      if (e.code === 'P2002') {
+        throw new HttpException(
+          'Username already exists',
+          HttpStatus.BAD_REQUEST,
+        );
       } else {
         throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
       }

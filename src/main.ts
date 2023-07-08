@@ -13,6 +13,6 @@ const corsOptions = {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.enableCors({ ...corsOptions });
-  await app.listen(process.env.PORT || 3000);
+  await app.listen(parseInt(process.env.PORT) || 3000);
 }
 bootstrap();
