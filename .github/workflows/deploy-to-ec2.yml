@@ -26,7 +26,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: ${{ secrets.DOCKER_IMAGE }}/${{ secrets.DOCKER_USERNAME }}:latest
+          tags: codby/weblive-backend_web:latest
 
   Deploy-To-EC2:
     name: Deploy to EC2
