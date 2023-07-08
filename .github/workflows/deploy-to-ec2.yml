@@ -25,9 +25,10 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: ${DOCKER_USERNAME}/${DOCKER_IMAGE}:latest
+          tags: codby/weblive-backend_web:latest
   Deploy:
     name: Deploy to EC2
+    needs: docker
     runs-on: ubuntu-latest
     env:
       HOSTNAME: ${{ secrets.SSH_HOST }}
