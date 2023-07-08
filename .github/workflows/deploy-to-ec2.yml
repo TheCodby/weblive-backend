@@ -48,7 +48,7 @@ jobs:
           chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
             cd /home/ubuntu/weblive-api
-            echo "${{ secrets.ENV_FILE }}" | sudo tee .env > /dev/null
+            sudo echo "${{ secrets.ENV_FILE }}" > env
           '
       - name: Starting Docker Container
         uses: addnab/docker-run-action@v3
@@ -58,4 +58,4 @@ jobs:
           registry: ${{ secrets.DOCKER_REGISTRY }}
           docker_network: host
           image: codby/weblive-backend_web:latest
-          options: -p 3000:3000 --name weblive-api --env-file .env codby/weblive-backend_web:latest
+          options: -p 3000:3000 --name weblive-api --env-file env codby/weblive-backend_web:latest
