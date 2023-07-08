@@ -53,6 +53,6 @@ jobs:
             if sudo docker ps -a | grep weblive-api; then
               sudo docker restart weblive-api
             else
-              sudo docker run -p 3000:3000 --detach --restart=always --name weblive-api --network host --env-file /home/ubuntu/weblive-api/env codby/weblive-backend_web:latest
+              sudo docker run -p 3000:3000 --detach --name weblive-api --network host --env-file /home/ubuntu/weblive-api/env codby/weblive-backend_web:latest
             fi
           '
