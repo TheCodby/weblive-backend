@@ -50,6 +50,7 @@ jobs:
             cd /home/ubuntu/weblive-api
             sudo echo "${{ secrets.ENV_FILE }}" > env
             sudo docker stop weblive-api
+            sudo docker pull codby/weblive-api:latest
             if sudo docker ps -a | grep weblive-api; then
               sudo docker start weblive-api
             else
