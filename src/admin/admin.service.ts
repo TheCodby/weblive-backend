@@ -19,6 +19,22 @@ export class AdminService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
+  async getUser(id: number) {
+    try {
+      return await this.prisma.user.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          id: true,
+          username: true,
+          admin: true,
+        },
+      });
+    } catch (e: any) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
+  }
   async deleteUser(id: number) {
     try {
       await this.prisma.user.delete({
