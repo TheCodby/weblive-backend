@@ -50,5 +50,5 @@ jobs:
             cd /home/ubuntu/weblive-api
             sudo echo "${{ secrets.ENV_FILE }}" > .env
             sudo docker pull codby/backend_web:latest
-            sudo docker run -p 3000:3000 --network="host" --name weblive-backend_web --env-file .env codby/weblive-backend_web:latest
+            sudo docker run -p 3000:3000 --network="host" --env-file .env codby/weblive-backend_web:latest
           '
