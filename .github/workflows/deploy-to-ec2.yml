@@ -30,7 +30,8 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Build & Deploy
-        run: '
+        run: |
+          '
           cd /home/ubuntu/weblive-api
           sudo echo "${{ secrets.ENV_FILE }}" > .env
           sudo docker pull ${DOCKER_USERNAME}/${DOCKER_IMAGE}:latest
