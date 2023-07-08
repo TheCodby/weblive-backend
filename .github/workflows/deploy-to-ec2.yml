@@ -50,5 +50,9 @@ jobs:
             cd /home/ubuntu/weblive-api
             sudo echo "${{ secrets.ENV_FILE }}" > env
             sudo docker stop weblive-api
-            sudo docker run -p 3000:3000 --detach --restart=always --name weblive-api --network host --env-file /home/ubuntu/weblive-api/env codby/weblive-backend_web:latest
+            if sudo docker ps -a | grep weblive-api; then
+              sudo docker start weblive-api
+            else
+              sudo docker run -p 3000:3000 --detach --restart=always --name weblive-api --network host --env-file /home/ubuntu/weblive-api/env codby/weblive-backend_web:latest
+            fi
           '
