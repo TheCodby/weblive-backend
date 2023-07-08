@@ -13,6 +13,7 @@ WORKDIR /usr/src/app
 COPY --chown=node:node package*.json ./
 
 # Install app dependencies using the `npm ci` command instead of `npm install`
+RUN npm install pm2 -g
 RUN npm ci
 
 # Bundle app source
@@ -58,5 +59,5 @@ COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/dist ./dist
 
 # Start the server using the production build
-CMD [ "node", "dist/src/main.js" ]
+CMD [ "pm2-runtime", "dist/src/main.js" ]
 
