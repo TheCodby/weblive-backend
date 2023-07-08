@@ -58,5 +58,5 @@ jobs:
           registry: ${{ secrets.DOCKER_REGISTRY }}
           docker_network: host
           image: codby/weblive-backend_web:latest
-          run: cd /home/ubuntu/weblive-api
+          run: pwd
           options: -p 3000:3000 --name weblive-api --env-file env codby/weblive-backend_web:latest
