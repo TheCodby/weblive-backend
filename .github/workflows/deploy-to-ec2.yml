@@ -49,5 +49,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
             cd /home/ubuntu/weblive-api
             sudo echo "${{ secrets.ENV_FILE }}" > env
-            docker run -p 3000:3000 --detach --restart=always --network host --env-file /home/ubuntu/weblive-api/env codby/weblive-backend_web:latest
+            sudo docker stop weblive-api
+            sudo docker run -p 3000:3000 --detach --restart=always --name weblive-api --network host --env-file /home/ubuntu/weblive-api/env codby/weblive-backend_web:latest
           '
