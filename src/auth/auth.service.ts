@@ -63,7 +63,11 @@ export class AuthService {
       } as User);
       return {
         message: 'Successfully logged in',
-        username: user.username,
+        user: {
+          id: user.id,
+          username: user.username,
+          picture: user.avatar,
+        },
         token: token,
       };
     }

@@ -1,4 +1,4 @@
-import { PrismaService } from '../../database/prisma.service';
+import { PrismaService } from '../database/prisma.service';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class RoomOwnerGuard implements CanActivate {
     // check if the request is coming from a websocket or http request
     if (context.getType() === 'ws') {
       userId = +context.switchToWs().getClient().handshake.query['userId'];
-      roomId = context.switchToWs().getClient().handshake.query['roomId'];
+      roomId = +context.switchToWs().getClient().handshake.query['roomId'];
     } else if (context.getType() === 'http') {
       userId = +context.switchToHttp().getRequest().user.id;
       roomId = +context.switchToHttp().getRequest().params.id;

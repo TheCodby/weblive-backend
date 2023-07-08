@@ -12,7 +12,7 @@ import {
   ParseFilePipe,
 } from '@nestjs/common';
 import { MeService } from './me.service';
-import { AuthGuard } from '@/src/utils/guards/auth.guard';
+import { AuthGuard } from '@/src/guards/auth.guard';
 import { JoiValidationPipe } from 'src/validation/JoiValidationPipe';
 import {
   ChangePasswordDto,

@@ -9,9 +9,9 @@ import {
 } from '@nestjs/websockets';
 import { WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { RoomAuthGuard } from '../utils/guards/room-auth.guard';
+import { RoomAuthGuard } from '../guards/room-auth.guard';
 import { JwtService } from '@nestjs/jwt';
-import { RoomOwnerGuard } from '../utils/guards/room-owner.guard';
+import { RoomOwnerGuard } from '../guards/room-owner.guard';
 import { PrismaService } from '../database/prisma.service';
 @WebSocketGateway({ cors: '*:*' })
 @UseGuards(RoomAuthGuard)
