@@ -13,6 +13,8 @@ WORKDIR /usr/src/app
 COPY --chown=node:node package*.json ./
 
 # Install app dependencies using the `npm ci` command instead of `npm install`
+RUN npm install -D typescript
+RUN npm install -D ts-node
 RUN npm install pm2 -g
 RUN npm ci
 
