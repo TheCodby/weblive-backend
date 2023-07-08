@@ -11,37 +11,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up SSH
+      - uses: actions/checkout@v2
+      - name: Build & Deploy
         env:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          echo "$PRIVATE_KEY" > private_key
-          chmod 600 private_key
-
-      - name: Deploy to EC2
-        env:
           HOSTNAME: ${{ secrets.SSH_HOST }}
           USER_NAME: ${{ secrets.USER_NAME }}
-          ENV_FILE_CONTENT: ${{ secrets.ENV_FILE }}
+
         run: |
-          scp -o StrictHostKeyChecking=no -i private_key -r . ${USER_NAME}@${HOSTNAME}:/home/ubuntu/weblive-backend
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
-            cd /home/ubuntu/weblive-backend
 
-            # Install global dependencies.
-            sudo npm i -g npm ts-node typescript prisma pm2
-
-            # Install local dependencies, generate Prisma client, push DB changes, and build the project.
-            sudo npm ci
-            echo "$ENV_FILE_CONTENT" > .env
-            sudo npx prisma generate
-            sudo npx prisma db push
+            # Now we have got access to EC2 and we will start the deployment.
+            if [ -d "/home/ubuntu/weblive-backend" ]; then
+              sudo rm -rf /home/ubuntu/weblive-backend
+            fi
+            sudo git clone https://github.com/TheCodby/weblive-backend.git
+            sudo chmod 777 /home/ubuntu/weblive-backend 
+            cd /home/ubuntu/weblive-backend 
+            sudo echo "${{ secrets.ENV_FILE }}" > .env
+            sudo npm i -g ts-node typescript prisma pm2 
+            sudo npm i 
+            sudo npx prisma generate 
+            sudo npx prisma db push 
             sudo npm run build
-
-            # Start or restart the backend service.
-            pm2 delete all
+            pm2 kill
             pm2 start dist/main.js --name weblive-backend
           '
