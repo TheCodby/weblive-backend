@@ -16,21 +16,23 @@ jobs:
       - name: Set up SSH
         env:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.SSH_HOST }}
-          USER_NAME: ${{ secrets.USER_NAME }}
         run: |
           echo "$PRIVATE_KEY" > private_key
           chmod 600 private_key
 
-      - name: Deploy to Docker swarm
-        uses: wshihadeh/docker-deployment-action@v1
-        with:
-          remote_docker_host: ${USER_NAME}@${HOSTNAME}
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-          deployment_mode: docker-swarm
-          copy_stack_file: true
-          deploy_path: /home/ubuntu
-          stack_file_name: docker-compose.yaml
-          keep_files: 5
-          args: weblive
+      - name: Build & Deploy
+        env:
+          HOSTNAME: ${{ secrets.SSH_HOST }}
+          USER_NAME: ${{ secrets.USER_NAME }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_IMAGE: ${{ secrets.DOCKER_IMAGE }}
+
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
+          cd /home/ubuntu/weblive-api
+          sudo echo "${{ secrets.ENV_FILE }}" > .env
+          sudo docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+          sudo docker pull ${DOCKER_USERNAME}/${DOCKER_IMAGE}:latest
+          sudo docker run -d -p 3000:3000 --env-file .env ${DOCKER_USERNAME}/${DOCKER_IMAGE}:latest --name ${DOCKER_IMAGE}
+          '
