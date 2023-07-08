@@ -26,7 +26,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: ${DOCKER_USERNAME}/${DOCKER_IMAGE}:latest
+          tags: ${{ secrets.DOCKER_IMAGE }}/${{ secrets.DOCKER_USERNAME }}:latest
   Deploy-To-EC2:
     name: Deploy to EC2
     needs: Containerize-and-Push
