@@ -57,6 +57,7 @@ export class AuthService {
         id: user.id,
         username: user.username,
         picture: user.avatar,
+        admin: user.admin,
       } as User);
       return {
         message: 'Successfully logged in',

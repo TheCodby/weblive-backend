@@ -49,7 +49,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
             cd /home/ubuntu/weblive-api
             sudo echo "${{ secrets.ENV_FILE }}" > env
-            sudo docker pull codby/weblive-api:latest
+            sudo docker pull codby/weblive-backend_web:latest
             if sudo docker ps -a | grep weblive-api; then
               sudo docker restart weblive-api
             else
