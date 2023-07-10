@@ -46,6 +46,7 @@ jobs:
           ssh_user: ${{ secrets.USER_NAME }}
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
           ssh_host_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+          ssh_jump_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
           docker_compose_prefix: docker-compose
           container_registry_username: ${{ secrets.DOCKER_USERNAME }}
           container_registry_password: ${{ secrets.DOCKER_PASSWORD }}
