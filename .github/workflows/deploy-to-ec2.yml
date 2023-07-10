@@ -47,7 +47,6 @@ jobs:
           echo "$PRIVATE_KEY" > private_key
           chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} 
-          scp -i private_key docker-compose.yml ${USER_NAME}@${HOSTNAME}:/home/ubuntu/weblive-api/docker-compose.yml'
             cd /home/ubuntu/weblive-api
             sudo echo "${{ secrets.ENV_FILE }}" > env
             sudo docker stop weblive-api || true
