@@ -39,15 +39,19 @@ jobs:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
     steps:
       - uses: actions/checkout@v2
-      - uses: astappiev/docker-compose-remote-action@master
-        name: Docker-Compose Remote Deployment
-        with:
-          ssh_host: ${{ secrets.SSH_HOST }}
-          ssh_user: ${{ secrets.USER_NAME }}
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          ssh_host_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-          ssh_jump_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-          docker_compose_prefix: docker-compose
-          container_registry_username: ${{ secrets.DOCKER_USERNAME }}
-          container_registry_password: ${{ secrets.DOCKER_PASSWORD }}
-          container_registry: ${{ secrets.DOCKER_REGISTRY }}
+
+      - name: Deploy to EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} 
+          scp -i private_key docker-compose.yml ${USER_NAME}@${HOSTNAME}:/home/ubuntu/weblive-api/docker-compose.yml'
+            cd /home/ubuntu/weblive-api
+            sudo echo "${{ secrets.ENV_FILE }}" > env
+            sudo docker stop weblive-api
+            sudo docker rm weblive-api
+            sudo docker pull codby/weblive-backend_web:latest
+            sudo docker run -p 3000:3000 --detach --name weblive-api --network host --env-file /home/ubuntu/weblive-api/env codby/weblive-backend_web:latest
+          '

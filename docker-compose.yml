@@ -9,11 +9,10 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
   api:
-    image: codby/weblive-backend_web
     depends_on:
       - db
     env_file:
-      - env
+      - .env
     build: .
     ports:
       - '3001:3000'
