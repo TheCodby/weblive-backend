@@ -50,8 +50,8 @@ jobs:
           scp -i private_key docker-compose.yml ${USER_NAME}@${HOSTNAME}:/home/ubuntu/weblive-api/docker-compose.yml'
             cd /home/ubuntu/weblive-api
             sudo echo "${{ secrets.ENV_FILE }}" > env
-            sudo docker stop weblive-api
-            sudo docker rm weblive-api
+            sudo docker stop weblive-api || true
+            sudo docker rm weblive-api || true
             sudo docker pull codby/weblive-backend_web:latest
             sudo docker run -p 3000:3000 --detach --name weblive-api --network host --env-file /home/ubuntu/weblive-api/env codby/weblive-backend_web:latest
           '
