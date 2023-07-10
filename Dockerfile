@@ -13,9 +13,6 @@ WORKDIR /usr/src/app
 COPY --chown=node:node package*.json ./
 
 # Install app dependencies using the `npm ci` command instead of `npm install`
-RUN npm install -D typescript
-RUN npm install -D ts-node
-RUN npm install pm2 -g
 RUN npm ci
 
 # Bundle app source
@@ -58,7 +55,9 @@ FROM node:18-alpine As production
 # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/dist ./dist
+COPY --chown=node:node --from=build /usr/src/app/package*.json ./
+COPY --chown=node:node --from=build /usr/src/app/prisma ./prisma
 
 # Start the server using the production build
-CMD [ "node", "dist/src/main.js" ]
+CMD [ "npm", "run", "start:migrate:prod" ]
 
