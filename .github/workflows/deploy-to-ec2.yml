@@ -39,19 +39,23 @@ jobs:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
     steps:
       - uses: actions/checkout@v2
-
+      - name: copy docker compose to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.USER_NAME }}
+          key: ${{ secrets.SSH_PUBLIC_KEY }}
+          port: 22
+          source: 'docker-compose.yml'
+          target: /home/ubuntu/weblive-api
       - name: Deploy to EC2
         env:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           echo "$PRIVATE_KEY" > private_key
           chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} 
-          scp -i private_key docker-compose.yml ${USER_NAME}@${HOSTNAME}:/home/ubuntu/weblive-api/docker-compose.yml'
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
             cd /home/ubuntu/weblive-api
-            sudo echo "${{ secrets.ENV_FILE }}" > env
-            sudo docker stop weblive-api
-            sudo docker rm weblive-api
-            sudo docker pull codby/weblive-backend_web:latest
-            sudo docker run -p 3000:3000 --detach --name weblive-api --network host --env-file /home/ubuntu/weblive-api/env codby/weblive-backend_web:latest
+            echo "${{ secrets.DOCKER_PASSWORD }}" | docker ${{ secrets.DOCKER_REGISTRY }} -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            sudo docker-compose up -d
           '
