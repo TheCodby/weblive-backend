@@ -40,14 +40,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: copy docker compose to server
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.USER_NAME }}
-          key: ${{ secrets.SSH_PUBLIC_KEY }}
-          port: 22
-          source: 'docker-compose.yml'
-          target: /home/ubuntu/weblive-api
+        run: |
+          scp -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} docker-compose.yml ${USER_NAME}@${HOSTNAME}:/home/ubuntu/weblive-api
       - name: Deploy to EC2
         env:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
