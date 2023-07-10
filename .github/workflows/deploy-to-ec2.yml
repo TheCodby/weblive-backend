@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: copy docker compose to server
         run: |
-          scp -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} docker-compose.yml ${USER_NAME}@${HOSTNAME}:/home/ubuntu/weblive-api
+          scp -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} /docker-compose.yml ${USER_NAME}@${HOSTNAME}:/home/ubuntu/weblive-api
       - name: Deploy to EC2
         env:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
