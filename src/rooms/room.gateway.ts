@@ -74,14 +74,6 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
       picture: client.handshake.query['picture'],
     });
   }
-  getRoomsWithUserCounts(roomIds: string[]): { [roomId: string]: number } {
-    const roomCounts = {};
-    roomIds.forEach((roomId: string) => {
-      roomCounts[roomId] = this.server.sockets.adapter.rooms.get(roomId)?.size;
-    });
-
-    return roomCounts;
-  }
   async getRoomOwner(
     @ConnectedSocket() client: Socket,
   ): Promise<Socket | false> {
@@ -182,5 +174,26 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
       body: answer,
       sender: client.handshake.query['userId'],
     });
+  }
+  // functions to handle room events (update, delete)
+  getRoomsWithUserCounts(roomIds: string[]): { [roomId: string]: number } {
+    const roomCounts = {};
+    roomIds.forEach((roomId: string) => {
+      roomCounts[roomId] = this.server.sockets.adapter.rooms.get(roomId)?.size;
+    });
+
+    return roomCounts;
+  }
+  roomUpdated(roomId: string): void {
+    const room = this.server.sockets.adapter.rooms.get(roomId);
+    if (room) {
+      this.server.to(roomId).emit('roomUpdated');
+    }
+  }
+  roomDeleted(roomId: string): void {
+    const room = this.server.sockets.adapter.rooms.get(roomId);
+    if (room) {
+      this.server.to(roomId).emit('roomDeleted');
+    }
   }
 }

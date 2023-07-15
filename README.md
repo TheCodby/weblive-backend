@@ -1,73 +1,86 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Weblive
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Weblive is a simple web application that allows users to stream live video content over the internet. It provides a user-friendly interface for streaming and viewing live video broadcasts. This project is built using Node.js, Nest.js, and Nextjs.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# Frontend project
 
-## Description
+This is the frontend project, developed using Next.js [Weblive-Website](https://github.com/TheCodby/weblive).
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Getting Started
 
-## Installation
+To run the project using Docker Compose, please follow these steps:
 
-```bash
-$ npm install
+1. Clone the frontend repository:
+
+`git clone https://github.com/TheCodby/weblive.git`
+
+2. Change to the backend project directory:
+
+`cd weblive`
+
+3. Create a `.env` file in the root directory of the froentend project with the following content:
+
+```env
+NEXT_PUBLIC_API=http://127.0.0.1:3001
+JWT_SECRET=
+NEXT_PUBLIC_AWS_S3_BUCKET=
 ```
 
-## Running the app
+4. Run the following commands to start the frontend.
+   `npm run build
+npm run start`
+   Make sure to update the values accordingly if needed.
 
-```bash
-# development
-$ npm run start
+5. Clone the backend repository:
 
-# watch mode
-$ npm run start:dev
+`git clone https://github.com/TheCodby/weblive-backend.git`
 
-# production mode
-$ npm run start:prod
+5. Change to the backend project directory:
+
+`cd weblive-backend`
+
+6. Create a `.env` file in the root directory of the froentend project with the following content:
+
+```env
+ORIGIN=
+POSTGRES_DB=
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+DATABASE_URL=
+JWT_SECRET=
+AWS_REGION=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+ADMIN_PASSWORD=
 ```
 
-## Test
+7. Run the following command to start the project with Docker Compose:
 
-```bash
-# unit tests
-$ npm run test
+`docker-compose up --build`
 
-# e2e tests
-$ npm run test:e2e
+This will build and start the necessary containers for the application, including the PostgreSQL database and the API server.
 
-# test coverage
-$ npm run test:cov
-```
+8. Once the containers are up and running, open your web browser and navigate to `http://localhost:3000` to access the application.
 
-## Support
+## Contributing
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Contributions are welcome! If you'd like to contribute to this project, please follow these steps:
 
-## Stay in touch
+1. Fork the repository on GitHub.
+2. Create a new branch with a descriptive name for your feature/fix.
+3. Make your changes and commit them with clear commit messages.
+4. Push your changes to your forked repository.
+5. Submit a pull request explaining your changes and the problem they solve.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Please ensure that your code adheres to the existing coding style and conventions used in the project.
 
 ## License
 
-Nest is [MIT licensed](LICENSE).
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+
+## Contact
+
+If you have any questions, suggestions, or feedback, please feel free to reach out to the project maintainer:
+
+- Email: [thecodby@gmail.com](mailto:thecodby@gmail.com)
+- GitHub: [TheCodby](https://github.com/TheCodby)

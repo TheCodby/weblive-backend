@@ -114,6 +114,9 @@ export class RoomsService {
           type: updateRoomDto.password_protected ? 1 : 0,
         },
       });
+      if (this.roomGateway.server) {
+        this.roomGateway.roomUpdated(id.toString());
+      }
       return {
         message: 'Room updated successfully',
         room,
@@ -167,6 +170,9 @@ export class RoomsService {
           id,
         },
       });
+      if (this.roomGateway.server) {
+        this.roomGateway.roomDeleted(id.toString());
+      }
       return {
         message: 'Room deleted successfully',
       };

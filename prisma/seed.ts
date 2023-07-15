@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
+const cryptojs = require('crypto');
+const PrismaClient = require('@prisma/client').PrismaClient;
+const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 async function main() {
-  const password = randomBytes(10).toString('hex');
+  const password = cryptojs.randomBytes(20).toString('hex');
   const salt = bcrypt.genSaltSync(5);
   const hashedPassword = await bcrypt.hash(password, salt);
   try {
