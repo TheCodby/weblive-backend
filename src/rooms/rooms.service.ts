@@ -20,7 +20,7 @@ export class RoomsService {
           name: name,
           password: password_protected ? password : null,
           description: description,
-          type: password_protected ? 1 : 0,
+          type: password_protected && password !== '' ? 1 : 0,
           owner: {
             connect: {
               id: request.user.id,
@@ -33,6 +33,12 @@ export class RoomsService {
         room: newRoom,
       };
     } catch (e: any) {
+      if (e.code === 'P2002') {
+        throw new HttpException(
+          'Room name already exists',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -155,7 +161,11 @@ export class RoomsService {
             ? updateRoomDto.password
             : null,
 
-          type: updateRoomDto.password_protected ? 1 : 0,
+          type:
+            // if password_protected is true and password is not empty, type = 1
+            updateRoomDto.password_protected && updateRoomDto.password !== ''
+              ? 1
+              : 0,
         },
       });
       await this.prisma.userRoom.deleteMany({
