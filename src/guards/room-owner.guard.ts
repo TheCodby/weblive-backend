@@ -1,5 +1,11 @@
 import { PrismaService } from '../database/prisma.service';
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 
 @Injectable()
 export class RoomOwnerGuard implements CanActivate {
@@ -16,9 +22,16 @@ export class RoomOwnerGuard implements CanActivate {
       userId = +context.switchToHttp().getRequest().user.id;
       roomId = +context.switchToHttp().getRequest().params.id;
     }
-    const roomOwner = await this.prisma.room.findFirstOrThrow({
-      where: { id: roomId, ownerId: userId },
-    });
-    return roomOwner ? true : false;
+    try {
+      const roomOwner = await this.prisma.room.findFirstOrThrow({
+        where: { id: roomId, ownerId: userId },
+      });
+      return roomOwner ? true : false;
+    } catch (e: any) {
+      if (e.code === 'P2025') {
+        throw new HttpException('Room not found', HttpStatus.NOT_FOUND);
+      }
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
   }
 }

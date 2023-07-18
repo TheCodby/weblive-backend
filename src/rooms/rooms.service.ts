@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
-import { RequestWithUser } from '../interfaces/user';
+import { RequestWithUser, User } from '../interfaces/user';
 import { RoomGateway } from './room.gateway';
 import { PrismaService } from '../database/prisma.service';
 
@@ -11,6 +11,7 @@ export class RoomsService {
     private readonly prisma: PrismaService,
     private readonly roomGateway: RoomGateway,
   ) {}
+  private readonly MAX_ROOMS_PER_PAGE = 10;
   async create(createRoomDto: CreateRoomDto, request: RequestWithUser) {
     try {
       const { name, password, description, password_protected } = createRoomDto;
@@ -52,9 +53,12 @@ export class RoomsService {
             },
           },
         },
-        take: 10,
-        skip: (page - 1) * 10,
+        take: this.MAX_ROOMS_PER_PAGE,
+        skip: (page - 1) * this.MAX_ROOMS_PER_PAGE,
       });
+      const pages = Math.ceil(
+        (await this.prisma.room.count()) / this.MAX_ROOMS_PER_PAGE,
+      );
       // If server is running, get online users in each room
       if (this.roomGateway.server) {
         const onlineUsersInRooms = this.roomGateway.getRoomsWithUserCounts(
@@ -64,12 +68,15 @@ export class RoomsService {
           room['onlineUsers'] = onlineUsersInRooms[room.id.toString()] || 0;
         });
       }
-      return rooms;
+      return {
+        rooms,
+        pages,
+      };
     } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-  async findOne(id: number) {
+  async findOne(id: number, user: User) {
     try {
       const room = await this.prisma.room.findUniqueOrThrow({
         where: {
@@ -78,7 +85,7 @@ export class RoomsService {
       });
       const userJoined = await this.prisma.userRoom.findFirst({
         where: {
-          userId: 1,
+          userId: user.id,
           roomId: id,
         },
       });
@@ -94,34 +101,6 @@ export class RoomsService {
       if (e.code === 'P2025') {
         throw new HttpException('Room not found', HttpStatus.NOT_FOUND);
       }
-      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
-    }
-  }
-
-  async update(id: number, updateRoomDto: UpdateRoomDto) {
-    try {
-      const room = await this.prisma.room.update({
-        where: {
-          id,
-        },
-        data: {
-          name: updateRoomDto.name,
-          description: updateRoomDto.description,
-          password: updateRoomDto.password_protected
-            ? updateRoomDto.password
-            : null,
-
-          type: updateRoomDto.password_protected ? 1 : 0,
-        },
-      });
-      if (this.roomGateway.server) {
-        this.roomGateway.roomUpdated(id.toString());
-      }
-      return {
-        message: 'Room updated successfully',
-        room,
-      };
-    } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -160,6 +139,50 @@ export class RoomsService {
         message: 'Joined room successfully',
       };
     } catch (e: any) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+  async update(id: number, updateRoomDto: UpdateRoomDto) {
+    try {
+      const room = await this.prisma.room.update({
+        where: {
+          id,
+        },
+        data: {
+          name: updateRoomDto.name,
+          description: updateRoomDto.description,
+          password: updateRoomDto.password_protected
+            ? updateRoomDto.password
+            : null,
+
+          type: updateRoomDto.password_protected ? 1 : 0,
+        },
+      });
+      await this.prisma.userRoom.deleteMany({
+        where: {
+          roomId: id,
+          NOT: {
+            userId: room.ownerId,
+          },
+        },
+      });
+
+      if (this.roomGateway.server) {
+        this.roomGateway.roomUpdated(id.toString());
+      }
+      return {
+        message: 'Room updated successfully',
+        room,
+      };
+    } catch (e: any) {
+      if (e.code === 'P2025') {
+        throw new HttpException('Room not found', HttpStatus.NOT_FOUND);
+      } else if (e.code === 'P2002') {
+        throw new HttpException(
+          'Room name already exists',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }

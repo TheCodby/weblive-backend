@@ -50,8 +50,8 @@ export class RoomsController {
 
   @UseGuards(AuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.roomsService.findOne(+id);
+  findOne(@Param('id') id: string, @Req() request: RequestWithUser) {
+    return this.roomsService.findOne(+id, request.user);
   }
 
   @UseGuards(AuthGuard, RoomOwnerGuard)

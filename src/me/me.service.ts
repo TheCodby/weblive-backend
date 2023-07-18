@@ -22,6 +22,7 @@ export class MeService {
         bio: true,
         avatar: true,
         created_at: true,
+        admin: true,
       },
     });
     return user;

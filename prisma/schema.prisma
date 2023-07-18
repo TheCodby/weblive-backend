@@ -39,6 +39,6 @@ model UserRoom{
   userId Int
   roomId Int
   user User @relation(fields: [userId], references: [id])
-  room Room @relation(fields: [roomId], references: [id])
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
   created_at DateTime @default(now())
 }
