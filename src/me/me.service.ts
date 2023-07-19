@@ -23,6 +23,19 @@ export class MeService {
         avatar: true,
         created_at: true,
         admin: true,
+        rooms: {
+          select: {
+            id: true,
+            name: true,
+            capacity: true,
+            owner: {
+              select: {
+                username: true,
+                avatar: true,
+              },
+            },
+          },
+        },
       },
     });
     return user;
