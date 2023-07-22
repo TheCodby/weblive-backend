@@ -39,6 +39,9 @@ export class RoomsService {
           HttpStatus.BAD_REQUEST,
         );
       }
+      if (e instanceof HttpException) {
+        throw e;
+      }
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -79,10 +82,16 @@ export class RoomsService {
         pages,
       };
     } catch (e: any) {
+      if (e instanceof HttpException) {
+        throw e;
+      }
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
   async findOne(id: number, user: User) {
+    if (!parseInt(id.toString())) {
+      throw new HttpException('Room not found', HttpStatus.NOT_FOUND);
+    }
     try {
       const room = await this.prisma.room.findUniqueOrThrow({
         where: {
@@ -98,14 +107,16 @@ export class RoomsService {
       if (!userJoined && room.type === 1) {
         throw new HttpException(
           'You have not joined this room',
-          HttpStatus.UNAUTHORIZED,
+          HttpStatus.FORBIDDEN,
         );
       }
       return room;
     } catch (e: any) {
-      console.log(e);
       if (e.code === 'P2025') {
         throw new HttpException('Room not found', HttpStatus.NOT_FOUND);
+      }
+      if (e instanceof HttpException) {
+        throw e;
       }
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
@@ -145,6 +156,9 @@ export class RoomsService {
         message: 'Joined room successfully',
       };
     } catch (e: any) {
+      if (e instanceof HttpException) {
+        throw e;
+      }
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -193,6 +207,9 @@ export class RoomsService {
           HttpStatus.BAD_REQUEST,
         );
       }
+      if (e instanceof HttpException) {
+        throw e;
+      }
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -210,6 +227,9 @@ export class RoomsService {
         message: 'Room deleted successfully',
       };
     } catch (e: any) {
+      if (e instanceof HttpException) {
+        throw e;
+      }
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }

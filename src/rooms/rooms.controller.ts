@@ -44,7 +44,7 @@ export class RoomsController {
 
   @Get()
   @UseGuards()
-  findAll(@Query('page') page: number = 1) {
+  findAll(@Query('page') page = 1) {
     return this.roomsService.findAll(page);
   }
 
