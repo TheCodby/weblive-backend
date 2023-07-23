@@ -3,13 +3,25 @@ import { UserAuthDto } from './dto/user-auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt/dist';
 import { User } from 'src/interfaces/user';
+import { User as UserSchema } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
+import { Request } from 'express';
+import DiscordService from './oauth/discord.service';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly discordService: DiscordService,
   ) {}
+  private generateJwt(user: UserSchema) {
+    return this.jwtService.sign({
+      id: user.id,
+      username: user.username,
+      picture: user.avatar,
+      admin: user.admin,
+    } as User);
+  }
   async create(createAuthDto: UserAuthDto) {
     try {
       const salt = bcrypt.genSaltSync(5);
@@ -53,12 +65,7 @@ export class AuthService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const token = this.jwtService.sign({
-        id: user.id,
-        username: user.username,
-        picture: user.avatar,
-        admin: user.admin,
-      } as User);
+      const token = this.generateJwt(user);
       return {
         message: 'Successfully logged in',
         user: {
@@ -69,5 +76,30 @@ export class AuthService {
         token: token,
       };
     }
+  }
+  async callback(req: Request) {
+    const { code } = req.body;
+    let user: UserSchema;
+    switch (req.params.provider) {
+      case 'google':
+        break;
+      case 'discord':
+        user = await this.discordService.login(code);
+        break;
+      default:
+        throw new HttpException('Provider not found', HttpStatus.BAD_REQUEST);
+    }
+    if (!user)
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    const token = this.generateJwt(user);
+    return {
+      message: 'Successfully logged in',
+      user: {
+        id: user.id,
+        username: user.username,
+        picture: user.avatar,
+      },
+      token: token,
+    };
   }
 }

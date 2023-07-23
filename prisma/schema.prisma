@@ -17,6 +17,8 @@ model User{
   bio String?
   avatar String @default("default.jpg")
   last_login DateTime?
+  googleId String? @unique
+  discordId String? @unique
   rooms Room[]
   created_at DateTime @default(now())
   joinedRooms UserRoom[]

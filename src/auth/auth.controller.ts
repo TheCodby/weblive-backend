@@ -17,4 +17,8 @@ export class AuthController {
   login(@Body() loginAuthDto: UserAuthDto) {
     return this.authService.login(loginAuthDto);
   }
+  @Post('callback/:provider')
+  async callback(@Req() req) {
+    return this.authService.callback(req);
+  }
 }
