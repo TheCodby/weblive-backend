@@ -9,8 +9,8 @@ WORKDIR /home/node
 COPY package*.json ./
 COPY tsconfig.json ./
 
-RUN npm ci
 RUN npx prisma generate
+RUN npm ci
 COPY --chown=node:node . .
 RUN npm run build \
     && npm prune --production
