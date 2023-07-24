@@ -10,7 +10,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 RUN npm ci
-
+RUN npx prisma generate
 COPY --chown=node:node . .
 RUN npm run build \
     && npm prune --production

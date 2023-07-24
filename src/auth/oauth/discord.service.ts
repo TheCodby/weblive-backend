@@ -18,7 +18,7 @@ export default class DiscordService implements OauthProvider {
         client_secret: process.env.DISCORD_CLIENT_SECRET,
         grant_type: 'authorization_code',
         code,
-        redirect_uri: 'http://localhost:3000/oauth/callback/discord',
+        redirect_uri: `${process.env.ORIGIN}/oauth/callback/discord`,
         scope: 'identify',
       }),
     });

@@ -3,7 +3,7 @@ import { UserAuthDto } from './dto/user-auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt/dist';
 import { User } from 'src/interfaces/user';
-import type { User as UserSchema } from '@prisma/client';
+import { User as UserSchema } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { Request } from 'express';
 import DiscordService from './oauth/discord.service';
