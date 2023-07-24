@@ -3,7 +3,7 @@ import { UserAuthDto } from './dto/user-auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt/dist';
 import { User } from 'src/interfaces/user';
-import { User as UserSchema } from '@prisma/client';
+import Prisma from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { Request } from 'express';
 import DiscordService from './oauth/discord.service';
@@ -14,7 +14,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly discordService: DiscordService,
   ) {}
-  private generateJwt(user: UserSchema) {
+  private generateJwt(user: Prisma.User) {
     return this.jwtService.sign({
       id: user.id,
       username: user.username,
@@ -79,7 +79,7 @@ export class AuthService {
   }
   async callback(req: Request) {
     const { code } = req.body;
-    let user: UserSchema;
+    let user: Prisma.User;
     switch (req.params.provider) {
       case 'google':
         break;
