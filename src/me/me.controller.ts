@@ -22,6 +22,10 @@ import { RequestWithUser } from 'src/interfaces/user';
 import { UpdateProfileDto, updateProfileSchema } from './dto/UpdateProfile.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileSizeValidator } from '../validation/upload/FileSizeValidator';
+import {
+  CompleteAccountDto,
+  completeAccountSchema,
+} from './dto/CompleteAccount.dto';
 
 @Controller('me')
 @UseGuards(AuthGuard)
@@ -60,5 +64,13 @@ export class MeController {
     @Req() request: RequestWithUser,
   ) {
     return this.meService.updateProfilePicture(file, request);
+  }
+  @Post('complete')
+  @UsePipes(new JoiValidationPipe(completeAccountSchema))
+  completeAccount(
+    @Req() request: RequestWithUser,
+    @Body() completeAccount: CompleteAccountDto,
+  ) {
+    return this.meService.completeAccount(request, completeAccount);
   }
 }

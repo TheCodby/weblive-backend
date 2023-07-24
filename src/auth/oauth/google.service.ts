@@ -5,44 +5,40 @@ import { randomBytes } from 'crypto';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export default class DiscordService implements IOauthProvider {
+export default class GoogleService implements IOauthProvider {
   constructor(private readonly prisma: PrismaService) {}
   async getAccessToken(code: string) {
-    const response = await fetch('https://discord.com/api/oauth2/token', {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: process.env.DISCORD_CLIENT_ID,
-        client_secret: process.env.DISCORD_CLIENT_SECRET,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
         grant_type: 'authorization_code',
         code,
-        redirect_uri: `${process.env.ORIGIN}/oauth/callback/discord`,
-        scope: 'identify',
+        redirect_uri: `${process.env.ORIGIN}/oauth/callback/google`,
       }),
     });
     const data = await response.json();
     return data.access_token;
   }
   async profile(accessToken: string) {
-    const response = await fetch('https://discord.com/api/users/@me', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    const response = await fetch(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`,
+    );
     return response.json();
   }
   async createAccount(profile: any) {
     return await this.prisma.user.upsert({
       where: {
-        discordId: profile.id,
+        googleId: profile.sub,
       },
       update: {},
       create: {
         username: generateRandomUsername(),
-        discordId: profile.id,
+        googleId: profile.sub,
       },
     });
   }
@@ -52,7 +48,7 @@ export default class DiscordService implements IOauthProvider {
     console.log(profile);
     const user = await this.prisma.user.findUnique({
       where: {
-        discordId: profile.id,
+        googleId: profile.sub,
       },
     });
     if (!user) {

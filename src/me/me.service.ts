@@ -7,11 +7,13 @@ import { randomBytes, randomUUID } from 'crypto';
 import { s3Client } from '../utils/aws-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaService } from '../database/prisma.service';
+import { CompleteAccountDto } from './dto/CompleteAccount.dto';
 @Injectable()
 export class MeService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getProfile(request: RequestWithUser) {
+    let completed = true;
     const user = await this.prisma.user.findUnique({
       where: {
         id: request.user.id,
@@ -19,6 +21,7 @@ export class MeService {
       select: {
         id: true,
         username: true,
+        password: true,
         bio: true,
         avatar: true,
         created_at: true,
@@ -38,7 +41,14 @@ export class MeService {
         },
       },
     });
-    return user;
+    if (user.password === null) {
+      completed = false;
+    }
+    delete user.password;
+    return {
+      ...user,
+      completed: completed,
+    };
   }
   async changePassword(
     changePasswordDto: ChangePasswordDto,
@@ -135,5 +145,44 @@ export class MeService {
       message: 'Successfully uploaded',
       image_url: filename,
     };
+  }
+  async completeAccount(
+    request: RequestWithUser,
+    completeAccountInputs: CompleteAccountDto,
+  ) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: request.user.id,
+        },
+        select: {
+          password: true,
+        },
+      });
+      if (user.password !== null) {
+        throw new HttpException(
+          'Account already completed',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      const salt = bcrypt.genSaltSync(5);
+      const hashedPassword = await bcrypt.hash(
+        completeAccountInputs.password,
+        salt,
+      );
+      await this.prisma.user.update({
+        where: {
+          id: request.user.id,
+        },
+        data: {
+          password: hashedPassword,
+        },
+      });
+      return {
+        message: 'Successfully completed account',
+      };
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
   }
 }

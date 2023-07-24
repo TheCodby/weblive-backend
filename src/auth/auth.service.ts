@@ -7,12 +7,14 @@ import Prisma from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { Request } from 'express';
 import DiscordService from './oauth/discord.service';
+import GoogleService from './oauth/google.service';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
     private readonly discordService: DiscordService,
+    private readonly googleService: GoogleService,
   ) {}
   private generateJwt(user: Prisma.User) {
     return this.jwtService.sign({
@@ -82,6 +84,7 @@ export class AuthService {
     let user: Prisma.User;
     switch (req.params.provider) {
       case 'google':
+        user = await this.googleService.login(code);
         break;
       case 'discord':
         user = await this.discordService.login(code);
