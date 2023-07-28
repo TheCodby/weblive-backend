@@ -7,6 +7,7 @@ import { RoomsModule } from './rooms/rooms.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
 import { ConfigModule } from '@nestjs/config';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ConfigModule } from '@nestjs/config';
       limit: 10,
     }),
     AdminModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
