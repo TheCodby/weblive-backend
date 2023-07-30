@@ -21,6 +21,8 @@ model User{
   discordId String? @unique
   rooms Room[]
   created_at DateTime @default(now())
+  following Follow[] @relation("follower")
+  follower Follow[] @relation("following")
   joinedRooms UserRoom[]
 }
 model Room{
@@ -43,4 +45,14 @@ model UserRoom{
   user User @relation(fields: [userId], references: [id])
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
   created_at DateTime @default(now())
+}
+model Follow{
+  id Int @id @default(autoincrement())
+  followerId Int
+  followingId Int
+  follower User @relation(name: "follower", fields: [followerId], references: [id]) 
+  following User @relation(name: "following", fields: [followingId], references: [id])
+  created_at DateTime @default(now())
+
+  @@unique([followerId, followingId])
 }
