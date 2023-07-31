@@ -1,12 +1,14 @@
 import { PrismaService } from '@/src/database/prisma.service';
 import { IOauthProvider } from '@/src/interfaces/oauth';
-import { generateRandomUsername } from '@/src/utils/user';
-import { randomBytes } from 'crypto';
 import { Injectable } from '@nestjs/common';
+import { UserUtil } from '@/src/utils/user.util';
 
 @Injectable()
 export default class GoogleService implements IOauthProvider {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly users: UserUtil,
+  ) {}
   async getAccessToken(code: string) {
     const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -37,7 +39,7 @@ export default class GoogleService implements IOauthProvider {
       },
       update: {},
       create: {
-        username: generateRandomUsername(),
+        username: this.users.generateRandomUsername(),
         googleId: profile.sub,
       },
     });

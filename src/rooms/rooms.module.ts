@@ -3,7 +3,6 @@ import { RoomsService } from './rooms.service';
 import { RoomsController } from './rooms.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { RoomGateway } from './room.gateway';
-import { PrismaService } from '../database/prisma.service';
 import { PrismaModule } from '../database/prisma.module';
 
 @Module({

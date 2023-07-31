@@ -4,13 +4,16 @@ import * as bcrypt from 'bcrypt';
 import { RequestWithUser } from 'src/interfaces/user';
 import { UpdateProfileDto } from './dto/UpdateProfile.dto';
 import { randomBytes, randomUUID } from 'crypto';
-import { s3Client } from '../utils/aws-s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaService } from '../database/prisma.service';
 import { CompleteAccountDto } from './dto/CompleteAccount.dto';
+import { S3Util } from '../utils/s3.util';
 @Injectable()
 export class MeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly s3: S3Util,
+  ) {}
 
   async getProfile(request: RequestWithUser) {
     let completed = true;
@@ -124,7 +127,7 @@ export class MeService {
     request: RequestWithUser,
   ) {
     const filename = randomUUID() + randomBytes(5).toString('hex') + '.jpg';
-    await s3Client.send(
+    await this.s3.send(
       new PutObjectCommand({
         Bucket: 'weblive-1',
         Key: filename,

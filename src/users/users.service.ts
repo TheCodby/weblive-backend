@@ -1,9 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { UserUtil } from '../utils/user.util';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly users: UserUtil,
+  ) {}
+
   async getUserByUsername(requesterId: number, username: string) {
     const profile = await this.prisma.user.findUnique({
       where: {
@@ -30,18 +35,11 @@ export class UsersService {
         },
       },
     });
-    const isFollowing = await this.prisma.follow.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId: requesterId,
-          followingId: profile.id,
-        },
-      },
-    });
+    const follow = await this.users.isFollowing(requesterId, profile.id);
     if (!profile) throw new NotFoundException('User not found');
     return {
       ...profile,
-      isFollowing: !!isFollowing,
+      isFollowing: !!follow,
     };
   }
   async followUser(followerId: number, userId: number) {

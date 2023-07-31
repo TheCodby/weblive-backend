@@ -6,15 +6,18 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { JwtService } from '@nestjs/jwt/dist';
-import { extractTokenFromHeader } from '../utils/user';
+import { UserUtil } from '../utils/user.util';
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly users: UserUtil,
+  ) {}
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = extractTokenFromHeader(request);
+    const token = this.users.extractTokenFromHeader(request);
     try {
       const isLoggedin = this.jwtService.verify(token);
       request.user = isLoggedin;

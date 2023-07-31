@@ -3,6 +3,7 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { PrismaModule } from '../database/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
+import { UtilsModule } from '../utils/utils.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { JwtModule } from '@nestjs/jwt';
       signOptions: { expiresIn: '1d' },
     }),
     PrismaModule,
+    UtilsModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],

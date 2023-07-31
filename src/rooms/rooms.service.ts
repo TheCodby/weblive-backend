@@ -4,12 +4,14 @@ import { UpdateRoomDto } from './dto/update-room.dto';
 import { RequestWithUser, User } from '../interfaces/user';
 import { RoomGateway } from './room.gateway';
 import { PrismaService } from '../database/prisma.service';
+import { UserUtil } from '../utils/user.util';
 
 @Injectable()
 export class RoomsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly roomGateway: RoomGateway,
+    private readonly users: UserUtil,
   ) {}
   private readonly MAX_ROOMS_PER_PAGE = 10;
   async create(createRoomDto: CreateRoomDto, request: RequestWithUser) {
@@ -76,7 +78,17 @@ export class RoomsService {
       where: {
         id,
       },
+      include: {
+        owner: {
+          select: {
+            username: true,
+            avatar: true,
+          },
+        },
+      },
     });
+    const follow = await this.users.isFollowing(user.id, room.ownerId);
+    room.owner['isFollowing'] = !!follow;
     const userJoined = await this.prisma.userRoom.findFirst({
       where: {
         userId: user.id,

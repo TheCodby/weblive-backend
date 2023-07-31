@@ -1,12 +1,14 @@
 import { PrismaService } from '@/src/database/prisma.service';
 import { IOauthProvider } from '@/src/interfaces/oauth';
-import { generateRandomUsername } from '@/src/utils/user';
-import { randomBytes } from 'crypto';
+import { UserUtil } from '@/src/utils/user.util';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export default class DiscordService implements IOauthProvider {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly users: UserUtil,
+  ) {}
   async getAccessToken(code: string) {
     const response = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
@@ -41,7 +43,7 @@ export default class DiscordService implements IOauthProvider {
       },
       update: {},
       create: {
-        username: generateRandomUsername(),
+        username: this.users.generateRandomUsername(),
         discordId: profile.id,
       },
     });
