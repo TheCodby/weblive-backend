@@ -65,6 +65,7 @@ export class RoomsService {
         room['onlineUsers'] = onlineUsersInRooms[room.id.toString()] || 0;
       });
     }
+
     return {
       rooms,
       pages,

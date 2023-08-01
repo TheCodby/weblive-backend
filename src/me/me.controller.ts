@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Put,
   Patch,
   Req,
   UseGuards,
@@ -72,5 +73,13 @@ export class MeController {
     @Body() completeAccount: CompleteAccountDto,
   ) {
     return this.meService.completeAccount(request, completeAccount);
+  }
+  @Get('notifications')
+  getNotifications(@Req() request: RequestWithUser) {
+    return this.meService.getNotifications(+request.user.id);
+  }
+  @Get('notifications/read')
+  readNotifications(@Req() request: RequestWithUser) {
+    return this.meService.readNotifications(+request.user.id);
   }
 }

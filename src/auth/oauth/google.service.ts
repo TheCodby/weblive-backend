@@ -47,7 +47,6 @@ export default class GoogleService implements IOauthProvider {
   async login(code: string) {
     const accessToken = await this.getAccessToken(code);
     const profile = await this.profile(accessToken);
-    console.log(profile);
     const user = await this.prisma.user.findUnique({
       where: {
         googleId: profile.sub,

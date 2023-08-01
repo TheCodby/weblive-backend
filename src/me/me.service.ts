@@ -8,19 +8,21 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaService } from '../database/prisma.service';
 import { CompleteAccountDto } from './dto/CompleteAccount.dto';
 import { S3Util } from '../utils/s3.util';
+import { NotificationsUtil } from '../utils/notifications.util';
 @Injectable()
 export class MeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3: S3Util,
+    private readonly notifications: NotificationsUtil,
   ) {}
 
   async getProfile(request: RequestWithUser) {
-    let completed = true;
     const user = await this.prisma.user.findUnique({
       where: {
         id: request.user.id,
       },
+
       select: {
         id: true,
         username: true,
@@ -44,14 +46,12 @@ export class MeService {
         },
       },
     });
+    user['completed'] = true;
     if (user.password === null) {
-      completed = false;
+      user['completed'] = false;
     }
     delete user.password;
-    return {
-      ...user,
-      completed: completed,
-    };
+    return user;
   }
   async changePassword(
     changePasswordDto: ChangePasswordDto,
@@ -184,6 +184,24 @@ export class MeService {
       return {
         message: 'Successfully completed account',
       };
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+  async getNotifications(userId: number) {
+    try {
+      const notifications = await this.notifications.getNotifications(userId);
+      return notifications.length;
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+  async readNotifications(userId: number) {
+    try {
+      const notifications = await this.notifications.getNotifications(userId);
+      console.log(notifications);
+      await this.notifications.clearNotifications(userId);
+      return notifications;
     } catch (e) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }

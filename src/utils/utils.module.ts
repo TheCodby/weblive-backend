@@ -1,8 +1,9 @@
 import { Module, Global } from '@nestjs/common';
-import { PrismaModule } from '../database/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { UserUtil } from './user.util';
 import { S3Util } from './s3.util';
+import { RedisCache } from './cache.util';
+import { NotificationsUtil } from './notifications.util';
 
 @Global()
 @Module({
@@ -11,9 +12,8 @@ import { S3Util } from './s3.util';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1d' },
     }),
-    PrismaModule,
   ],
-  providers: [UserUtil, S3Util],
-  exports: [UserUtil, S3Util],
+  providers: [UserUtil, S3Util, NotificationsUtil, RedisCache],
+  exports: [UserUtil, S3Util, NotificationsUtil, RedisCache],
 })
 export class UtilsModule {}

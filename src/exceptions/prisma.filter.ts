@@ -7,7 +7,6 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const code = exception.code;
-    console.log(exception);
     if (code === 'P2002') {
       return response.status(409).json({
         message: `Duplicate value for field ${exception.meta.target}`,

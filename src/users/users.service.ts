@@ -10,16 +10,11 @@ export class UsersService {
   ) {}
 
   async getUserByUsername(requesterId: number, username: string) {
-    const profile = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         username: username,
       },
-      select: {
-        id: true,
-        username: true,
-        bio: true,
-        avatar: true,
-        created_at: true,
+      include: {
         rooms: {
           select: {
             id: true,
@@ -35,12 +30,16 @@ export class UsersService {
         },
       },
     });
+    const profile = this.prisma.exclude(user, [
+      'password',
+      'googleId',
+      'discordId',
+      'last_login',
+    ]);
     const follow = await this.users.isFollowing(requesterId, profile.id);
+    profile['isFollowing'] = !!follow;
     if (!profile) throw new NotFoundException('User not found');
-    return {
-      ...profile,
-      isFollowing: !!follow,
-    };
+    return profile;
   }
   async followUser(followerId: number, userId: number) {
     if (followerId === userId)

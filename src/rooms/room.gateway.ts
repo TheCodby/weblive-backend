@@ -13,12 +13,14 @@ import { RoomAuthGuard } from '../guards/room-auth.guard';
 import { JwtService } from '@nestjs/jwt';
 import { RoomOwnerGuard } from '../guards/room-owner.guard';
 import { PrismaService } from '../database/prisma.service';
+import { NotificationsUtil } from '../utils/notifications.util';
 @WebSocketGateway({ cors: '*:*' })
 @UseGuards(RoomAuthGuard)
 export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly notifications: NotificationsUtil,
   ) {}
   private onlineLiveRooms: Set<string> = new Set<string>();
   @WebSocketServer()
@@ -64,7 +66,7 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
         sender: user.username,
       });
     } catch (err) {
-      console.log(err);
+      client.disconnect();
     }
   }
   handleDisconnect(@ConnectedSocket() client: Socket) {
@@ -120,7 +122,6 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.emit('liveOffline');
       return;
     }
-    console.log('userRequestLive emited ' + client.handshake.query['userId']);
     roomOwner.emit('userRequestLive', client.handshake.query['userId']);
   }
   @UseGuards(RoomOwnerGuard)
@@ -131,16 +132,21 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): void {
     const clientSocket = this.getUserInRoom(client, body.to);
     if (!clientSocket) return;
-    console.log('candidate emited ' + client.handshake.query['userId']);
     clientSocket.emit('candidate', body.candidate);
   }
   @UseGuards(RoomOwnerGuard)
   @SubscribeMessage('live')
   handleLive(@ConnectedSocket() client: Socket): void {
     const roomId = client.handshake.query['roomId'] as string;
-    console.log('live emited ' + client.handshake.query['userId']);
     if (this.onlineLiveRooms.has(roomId)) return;
     this.onlineLiveRooms.add(roomId);
+    this.notifications.pushNotification(+client.handshake.query['userId'], {
+      id: 0,
+      type: 'live',
+      message: 'Your live is now online',
+      read: false,
+      createdAt: new Date(),
+    });
     this.server.to(client.handshake.query['roomId']).emit('liveStarted');
   }
   @UseGuards(RoomOwnerGuard)
@@ -158,7 +164,6 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): void {
     const clientSocket = this.getUserInRoom(client, body.to);
     if (!clientSocket) return;
-    console.log('offer emited  ' + client.handshake.query['userId']);
     clientSocket.emit('offer', body.offer);
   }
   @UseGuards(RoomAuthGuard)
@@ -169,7 +174,6 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): Promise<void> {
     const roomOwner = await this.getRoomOwner(client);
     if (!roomOwner) return;
-    console.log('answer emited  ' + client.handshake.query['userId']);
     roomOwner.emit('answer', {
       body: answer,
       sender: client.handshake.query['userId'],
