@@ -190,8 +190,10 @@ export class MeService {
   }
   async getNotifications(userId: number) {
     try {
-      const notifications = await this.notifications.getNotifications(userId);
-      return notifications.length;
+      const notificationsNum = await this.notifications.getNotificationsNumber(
+        userId,
+      );
+      return notificationsNum;
     } catch (e) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }

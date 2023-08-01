@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Put,
   Patch,
   Req,
   UseGuards,
