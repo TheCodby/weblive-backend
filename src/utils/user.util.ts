@@ -14,6 +14,25 @@ export class UserUtil {
     });
     return !!follow;
   }
+  async getFollowersCount(userId: number) {
+    const count = await this.prisma.follow.count({
+      where: {
+        followingId: userId,
+      },
+    });
+    return count;
+  }
+  async getFollowersIds(userId: number): Promise<number[]> {
+    const followers = await this.prisma.follow.findMany({
+      where: {
+        followingId: userId,
+      },
+      select: {
+        followerId: true,
+      },
+    });
+    return followers.map((follower) => follower.followerId);
+  }
   extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;

@@ -14,6 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RoomOwnerGuard } from '../guards/room-owner.guard';
 import { PrismaService } from '../database/prisma.service';
 import { NotificationsUtil } from '../utils/notifications.util';
+import { UserUtil } from '../utils/user.util';
 @WebSocketGateway({ cors: '*:*' })
 @UseGuards(RoomAuthGuard)
 export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -21,6 +22,7 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly notifications: NotificationsUtil,
+    private readonly users: UserUtil,
   ) {}
   private onlineLiveRooms: Set<string> = new Set<string>();
   @WebSocketServer()
@@ -136,15 +138,17 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
   @UseGuards(RoomOwnerGuard)
   @SubscribeMessage('live')
-  handleLive(@ConnectedSocket() client: Socket): void {
+  async handleLive(@ConnectedSocket() client: Socket): Promise<void> {
     const roomId = client.handshake.query['roomId'] as string;
     if (this.onlineLiveRooms.has(roomId)) return;
     this.onlineLiveRooms.add(roomId);
-    this.notifications.pushNotification(+client.handshake.query['userId'], {
-      id: 0,
+    const followers = await this.users.getFollowersIds(
+      +client.handshake.query['userId'],
+    );
+    this.notifications.pushNotificationToMany(followers, {
+      message: `${client.handshake.query['username']} Started a live`,
       type: 'live',
-      message: 'Your live is now online',
-      read: false,
+      url: `/rooms/${roomId}`,
       createdAt: new Date(),
     });
     this.server.to(client.handshake.query['roomId']).emit('liveStarted');
