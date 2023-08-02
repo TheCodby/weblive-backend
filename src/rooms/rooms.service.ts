@@ -5,6 +5,8 @@ import { RequestWithUser, User } from '../interfaces/user';
 import { RoomGateway } from './room.gateway';
 import { PrismaService } from '../database/prisma.service';
 import { UserUtil } from '../utils/user.util';
+import CustomLoggerService from '../logger/logger.service';
+import { RedisCache } from '../utils/cache.util';
 
 @Injectable()
 export class RoomsService {
@@ -12,8 +14,10 @@ export class RoomsService {
     private readonly prisma: PrismaService,
     private readonly roomGateway: RoomGateway,
     private readonly users: UserUtil,
+    private readonly cache: RedisCache,
   ) {}
   private readonly MAX_ROOMS_PER_PAGE = 10;
+  private readonly logger = new CustomLoggerService(RoomsService.name);
   async create(createRoomDto: CreateRoomDto, request: RequestWithUser) {
     const { name, password, description, password_protected } = createRoomDto;
     const newRoom = await this.prisma.room.create({
@@ -36,23 +40,31 @@ export class RoomsService {
   }
 
   async findAll(page: number) {
-    const rooms = await this.prisma.room.findMany({
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        type: true,
-        capacity: true,
-        owner: {
-          select: {
-            username: true,
-            avatar: true,
-          },
-        },
-      },
-      take: this.MAX_ROOMS_PER_PAGE,
-      skip: (page - 1) * this.MAX_ROOMS_PER_PAGE,
-    });
+    const rooms = JSON.parse(
+      await this.cache.setCacheIfNotExists(
+        `rooms/${page}`,
+        JSON.stringify(
+          await this.prisma.room.findMany({
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              type: true,
+              capacity: true,
+              owner: {
+                select: {
+                  username: true,
+                  avatar: true,
+                },
+              },
+            },
+            take: this.MAX_ROOMS_PER_PAGE,
+            skip: (page - 1) * this.MAX_ROOMS_PER_PAGE,
+          }),
+        ),
+        10000,
+      ),
+    );
     const pages = Math.ceil(
       (await this.prisma.room.count()) / this.MAX_ROOMS_PER_PAGE,
     );
@@ -65,7 +77,7 @@ export class RoomsService {
         room['onlineUsers'] = onlineUsersInRooms[room.id.toString()] || 0;
       });
     }
-
+    this.logger.log(`Done`);
     return {
       rooms,
       pages,

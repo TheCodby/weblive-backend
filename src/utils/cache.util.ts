@@ -6,17 +6,10 @@ export class RedisCache extends Redis {
   constructor() {
     super(process.env.REDIS_URL);
   }
-  async getCache(key: string) {
-    const value = await this.get(key);
-    return value ? JSON.parse(value) : null;
-  }
-  async setCache(key: string, value: any) {
-    return await this.set(key, JSON.stringify(value));
-  }
-  async deleteCache(key: string) {
-    return await this.del(key);
-  }
-  async clearCache() {
-    return await this.flushdb();
+  async setCacheIfNotExists(key: string, value: string, ttl: number) {
+    if (!(await this.exists(key))) {
+      await this.set(key, value, 'EX', ttl);
+    }
+    return await this.get(key);
   }
 }

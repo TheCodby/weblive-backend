@@ -12,7 +12,9 @@ const corsOptions = {
   },
 };
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule, {
+    cors: true,
+  });
   app.enableCors({ ...corsOptions });
   app.useGlobalFilters(new PrismaExceptionFilter());
   await app.listen(parseInt(process.env.PORT) || 3000);

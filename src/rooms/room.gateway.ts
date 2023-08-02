@@ -142,15 +142,20 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = client.handshake.query['roomId'] as string;
     if (this.onlineLiveRooms.has(roomId)) return;
     this.onlineLiveRooms.add(roomId);
-    const followers = await this.users.getFollowersIds(
-      +client.handshake.query['userId'],
-    );
-    this.notifications.pushNotificationToMany(followers, {
-      message: `${client.handshake.query['username']} Started a live`,
-      type: 'live',
-      url: `/rooms/${roomId}`,
-      createdAt: new Date(),
-    });
+    // push notification to followers of the room owner that he started a live in this room, with non-blocking promise
+    this.users
+      .getFollowersIds(+client.handshake.query['userId'])
+      .then((followers) => {
+        this.notifications.pushNotificationToMany(followers, {
+          message: `${client.handshake.query['username']} Started a live`,
+          type: 'live',
+          url: `/rooms/${roomId}`,
+          createdAt: new Date(),
+        });
+      })
+      .catch((err) => {
+        console.error('Error while pushing notifications:', err);
+      });
     this.server.to(client.handshake.query['roomId']).emit('liveStarted');
   }
   @UseGuards(RoomOwnerGuard)
@@ -183,7 +188,6 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
       sender: client.handshake.query['userId'],
     });
   }
-  // functions to handle room events (update, delete)
   getRoomsWithUserCounts(roomIds: string[]): { [roomId: string]: number } {
     const roomCounts = {};
     roomIds.forEach((roomId: string) => {
