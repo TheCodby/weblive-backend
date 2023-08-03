@@ -4,6 +4,7 @@ import { UserUtil } from './user.util';
 import { S3Util } from './s3.util';
 import { RedisCache } from './cache.util';
 import { NotificationsUtil } from './notifications.util';
+import { MailerUtil } from './mailer.util';
 
 @Global()
 @Module({
@@ -13,7 +14,7 @@ import { NotificationsUtil } from './notifications.util';
       signOptions: { expiresIn: '1d' },
     }),
   ],
-  providers: [UserUtil, S3Util, NotificationsUtil, RedisCache],
-  exports: [UserUtil, S3Util, NotificationsUtil, RedisCache],
+  providers: [UserUtil, S3Util, NotificationsUtil, RedisCache, MailerUtil],
+  exports: [UserUtil, S3Util, NotificationsUtil, RedisCache, MailerUtil],
 })
 export class UtilsModule {}

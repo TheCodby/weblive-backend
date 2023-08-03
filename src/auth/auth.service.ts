@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserAuthDto } from './dto/user-auth.dto';
+import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt/dist';
 import { User } from 'src/interfaces/user';
@@ -8,6 +9,10 @@ import { PrismaService } from '../database/prisma.service';
 import { Request } from 'express';
 import DiscordService from './oauth/discord.service';
 import GoogleService from './oauth/google.service';
+import { MailerUtil } from '../utils/mailer.util';
+import { render } from '@react-email/render';
+import Verification from '../email-templates/verification';
+import { randomBytes } from 'crypto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -15,6 +20,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly discordService: DiscordService,
     private readonly googleService: GoogleService,
+    private readonly mailer: MailerUtil,
   ) {}
   private generateJwt(user: Prisma.User) {
     return this.jwtService.sign({
@@ -24,16 +30,18 @@ export class AuthService {
       admin: user.admin,
     } as User);
   }
-  async create(createAuthDto: UserAuthDto) {
+  async create(createAuthDto: RegisterDto) {
     try {
       const salt = bcrypt.genSaltSync(5);
       const hashedPassword = await bcrypt.hash(createAuthDto.password, salt);
       await this.prisma.user.create({
         data: {
           username: createAuthDto.username,
+          email: createAuthDto.email,
           password: hashedPassword,
         },
       });
+      this.sendVerificationEmail(createAuthDto.email);
       return {
         message: 'Successfully created an account',
       };
@@ -46,6 +54,38 @@ export class AuthService {
       } else {
         throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
       }
+    }
+  }
+  async sendVerificationEmail(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    } else {
+      const code = randomBytes(20).toString('hex');
+      await this.prisma.user.update({
+        where: {
+          email: email,
+        },
+        data: {
+          verificationCode: code,
+        },
+      });
+      this.mailer.sendMail(
+        email,
+        'Verify your email',
+        render(
+          Verification({
+            code: code,
+          }),
+        ),
+      );
+      return {
+        message: 'Successfully sent verification email',
+      };
     }
   }
   async login(loginAuthDto: UserAuthDto) {
