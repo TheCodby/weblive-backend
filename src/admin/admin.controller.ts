@@ -16,7 +16,7 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('users')
-  async getUsers(@Query('page') page: number = 1) {
+  async getUsers(@Query('page') page = 1) {
     return await this.adminService.getUsers(page);
   }
   @Get('users/:id')

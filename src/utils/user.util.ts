@@ -1,10 +1,17 @@
 import { Request } from 'express';
 import { PrismaService } from '../database/prisma.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { randomBytes } from 'crypto';
+import { MailerUtil } from './mailer.util';
+import { render } from '@react-email/render';
+import Verification from '../email-templates/verification';
 
 @Injectable()
 export class UserUtil {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailer: MailerUtil,
+  ) {}
   async isFollowing(followerId: number, followingId: number) {
     const follow = await this.prisma.follow.findFirst({
       where: {
@@ -32,6 +39,46 @@ export class UserUtil {
       },
     });
     return followers.map((follower) => follower.followerId);
+  }
+  async sendVerificationEmail(userId: number) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+      } else if (user.verified) {
+        throw new HttpException(
+          'Email is already verified',
+          HttpStatus.BAD_REQUEST,
+        );
+      } else {
+        const code = randomBytes(20).toString('hex');
+        await this.prisma.user.update({
+          where: {
+            email: user.email,
+          },
+          data: {
+            verificationCode: code,
+          },
+        });
+        this.mailer.sendMail(
+          user.email,
+          'Verify your email',
+          render(
+            Verification({
+              username: user.username,
+              code: code,
+            }),
+          ),
+        );
+        return true;
+      }
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
   }
   extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];

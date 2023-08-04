@@ -9,12 +9,14 @@ import { PrismaService } from '../database/prisma.service';
 import { CompleteAccountDto } from './dto/CompleteAccount.dto';
 import { S3Util } from '../utils/s3.util';
 import { NotificationsUtil } from '../utils/notifications.util';
+import { UserUtil } from '../utils/user.util';
 @Injectable()
 export class MeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3: S3Util,
     private readonly notifications: NotificationsUtil,
+    private readonly user: UserUtil,
   ) {}
 
   async getProfile(request: RequestWithUser) {
@@ -26,11 +28,13 @@ export class MeService {
       select: {
         id: true,
         username: true,
-        password: true,
+        email: true,
         bio: true,
         avatar: true,
         created_at: true,
         admin: true,
+        verified: true,
+        completed: true,
         rooms: {
           select: {
             id: true,
@@ -46,12 +50,28 @@ export class MeService {
         },
       },
     });
-    user['completed'] = true;
-    if (user.password === null) {
-      user['completed'] = false;
-    }
-    delete user.password;
     return user;
+  }
+  async resendVerificationEmail(userId: number) {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: {
+        id: userId,
+      },
+    });
+    if (user.id !== userId) {
+      throw new HttpException(
+        'You are not authorized to do this',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    try {
+      this.user.sendVerificationEmail(user.id);
+      return {
+        message: 'Successfully sent verification email',
+      };
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
   }
   async changePassword(
     changePasswordDto: ChangePasswordDto,
@@ -159,10 +179,10 @@ export class MeService {
           id: request.user.id,
         },
         select: {
-          password: true,
+          completed: true,
         },
       });
-      if (user.password !== null) {
+      if (user.completed) {
         throw new HttpException(
           'Account already completed',
           HttpStatus.BAD_REQUEST,
@@ -179,6 +199,7 @@ export class MeService {
         },
         data: {
           password: hashedPassword,
+          completed: true,
         },
       });
       return {

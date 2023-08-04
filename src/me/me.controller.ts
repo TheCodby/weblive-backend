@@ -81,4 +81,8 @@ export class MeController {
   readNotifications(@Req() request: RequestWithUser) {
     return this.meService.readNotifications(+request.user.id);
   }
+  @Post('resend-verification')
+  resendVerification(@Req() req: RequestWithUser) {
+    return this.meService.resendVerificationEmail(req.user.id);
+  }
 }

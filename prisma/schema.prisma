@@ -12,7 +12,7 @@ model User{
   id Int @id @default(autoincrement())
   username String @unique
   email String? @unique
-  verificationCode String?
+  verificationCode String? @unique
   password String?
   admin Boolean @default(false)
   ip String?
@@ -26,6 +26,8 @@ model User{
   following Follow[] @relation("follower")
   follower Follow[] @relation("following")
   joinedRooms UserRoom[]
+  verified Boolean @default(false)
+  completed Boolean @default(false)
 }
 model Room{
   id Int @id @default(autoincrement())

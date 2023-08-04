@@ -57,6 +57,7 @@ DISCORD_CLIENT_SECRET=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 REDIS_URL=
+DOMAIN_NAME=
 ```
 
 7. Run the following command to start the project with Docker Compose:

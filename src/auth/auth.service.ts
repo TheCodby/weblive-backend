@@ -9,10 +9,7 @@ import { PrismaService } from '../database/prisma.service';
 import { Request } from 'express';
 import DiscordService from './oauth/discord.service';
 import GoogleService from './oauth/google.service';
-import { MailerUtil } from '../utils/mailer.util';
-import { render } from '@react-email/render';
-import Verification from '../email-templates/verification';
-import { randomBytes } from 'crypto';
+import { UserUtil } from '../utils/user.util';
 @Injectable()
 export class AuthService {
   constructor(
@@ -20,7 +17,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly discordService: DiscordService,
     private readonly googleService: GoogleService,
-    private readonly mailer: MailerUtil,
+    private readonly user: UserUtil,
   ) {}
   private generateJwt(user: Prisma.User) {
     return this.jwtService.sign({
@@ -34,14 +31,15 @@ export class AuthService {
     try {
       const salt = bcrypt.genSaltSync(5);
       const hashedPassword = await bcrypt.hash(createAuthDto.password, salt);
-      await this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: {
           username: createAuthDto.username,
           email: createAuthDto.email,
           password: hashedPassword,
+          completed: true,
         },
       });
-      this.sendVerificationEmail(createAuthDto.email);
+      this.user.sendVerificationEmail(user.id);
       return {
         message: 'Successfully created an account',
       };
@@ -56,35 +54,29 @@ export class AuthService {
       }
     }
   }
-  async sendVerificationEmail(email: string) {
+  async verify(code: string) {
     const user = await this.prisma.user.findUnique({
       where: {
-        email: email,
+        verificationCode: code,
       },
     });
     if (!user) {
-      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "Verification code doesn't exist",
+        HttpStatus.BAD_REQUEST,
+      );
     } else {
-      const code = randomBytes(20).toString('hex');
       await this.prisma.user.update({
         where: {
-          email: email,
+          id: user.id,
         },
         data: {
-          verificationCode: code,
+          verificationCode: null,
+          verified: true,
         },
       });
-      this.mailer.sendMail(
-        email,
-        'Verify your email',
-        render(
-          Verification({
-            code: code,
-          }),
-        ),
-      );
       return {
-        message: 'Successfully sent verification email',
+        message: 'Successfully verified email',
       };
     }
   }
