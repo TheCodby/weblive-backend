@@ -26,7 +26,7 @@ model User{
   following Follow[] @relation("follower")
   follower Follow[] @relation("following")
   joinedRooms UserRoom[]
-  verified Boolean @default(true)
+  verified Boolean @default(false)
   completed Boolean @default(false)
 }
 model Room{

@@ -48,12 +48,9 @@ export class UserUtil {
         },
       });
       if (!user) {
-        throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+        throw new Error('User not found');
       } else if (user.verified) {
-        throw new HttpException(
-          'Email is already verified',
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new Error('User already verified');
       } else {
         const code = randomBytes(20).toString('hex');
         await this.prisma.user.update({
@@ -77,7 +74,7 @@ export class UserUtil {
         return true;
       }
     } catch (e) {
-      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+      throw new Error(e.message);
     }
   }
   extractTokenFromHeader(request: Request): string | undefined {

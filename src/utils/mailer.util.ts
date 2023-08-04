@@ -32,10 +32,6 @@ export class MailerUtil extends SESClient {
           /* required */
           Html: {
             Charset: 'UTF-8',
-            Data: 'HTML_FORMAT_BODY',
-          },
-          Text: {
-            Charset: 'UTF-8',
             Data: html,
           },
         },
