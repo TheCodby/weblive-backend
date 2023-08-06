@@ -1,10 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ChangePasswordDto } from './dto/ChangePassword.dto';
 import * as bcrypt from 'bcrypt';
-import { RequestWithUser } from 'src/interfaces/user';
 import { UpdateProfileDto } from './dto/UpdateProfile.dto';
 import { randomBytes, randomUUID } from 'crypto';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaService } from '../database/prisma.service';
 import { CompleteAccountDto } from './dto/CompleteAccount.dto';
 import { S3Util } from '../utils/s3.util';
@@ -19,10 +17,10 @@ export class MeService {
     private readonly user: UserUtil,
   ) {}
 
-  async getProfile(request: RequestWithUser) {
+  async getProfile(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: {
-        id: request.user.id,
+        id: userId,
       },
 
       select: {
@@ -73,14 +71,11 @@ export class MeService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-  async changePassword(
-    changePasswordDto: ChangePasswordDto,
-    request: RequestWithUser,
-  ) {
+  async changePassword(changePasswordDto: ChangePasswordDto, userId: number) {
     try {
       const userData = await this.prisma.user.findUnique({
         where: {
-          id: request.user.id,
+          id: userId,
         },
         select: {
           password: true,
@@ -102,7 +97,7 @@ export class MeService {
       const hashedPassword = await bcrypt.hash(newPassword, salt);
       await this.prisma.user.update({
         where: {
-          id: request.user.id,
+          id: userId,
         },
         data: {
           password: hashedPassword,
@@ -115,14 +110,11 @@ export class MeService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-  async updateProfile(
-    updateProfileDto: UpdateProfileDto,
-    request: RequestWithUser,
-  ) {
+  async updateProfile(updateProfileDto: UpdateProfileDto, userId: number) {
     try {
       await this.prisma.user.update({
         where: {
-          id: request.user.id,
+          id: userId,
         },
         data: {
           ...updateProfileDto,
@@ -142,26 +134,32 @@ export class MeService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-  async updateProfilePicture(
-    file: Express.Multer.File,
-    request: RequestWithUser,
-  ) {
+  async updateProfilePicture(file: Express.Multer.File, userId: number) {
     const filename = randomUUID() + randomBytes(5).toString('hex') + '.jpg';
-    await this.s3.send(
-      new PutObjectCommand({
-        Bucket: 'weblive-1',
-        Key: filename,
-        Body: file.buffer,
-        ContentEncoding: 'base64',
-        ContentType: 'image/jpeg',
-      }),
+    await this.s3.uploadFile(
+      'weblive-1',
+      filename,
+      file.buffer,
+      'image/jpeg',
+      'base64',
     );
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        avatar: true,
+      },
+    });
+    if (user.avatar) {
+      await this.s3.removeFile('weblive-1', user.avatar);
+    }
     await this.prisma.user.update({
       where: {
-        id: request.user.id,
+        id: userId,
       },
       data: {
-        avatar: filename,
+        avatar: `https://weblive-1.s3.us-east-1.amazonaws.com/${filename}`,
       },
     });
     return {
@@ -170,13 +168,13 @@ export class MeService {
     };
   }
   async completeAccount(
-    request: RequestWithUser,
+    userId: number,
     completeAccountInputs: CompleteAccountDto,
   ) {
     try {
       const user = await this.prisma.user.findUnique({
         where: {
-          id: request.user.id,
+          id: userId,
         },
         select: {
           completed: true,
@@ -195,7 +193,7 @@ export class MeService {
       );
       await this.prisma.user.update({
         where: {
-          id: request.user.id,
+          id: userId,
         },
         data: {
           password: hashedPassword,
@@ -222,7 +220,6 @@ export class MeService {
   async readNotifications(userId: number) {
     try {
       const notifications = await this.notifications.getNotifications(userId);
-      console.log(notifications);
       await this.notifications.clearNotifications(userId);
       return notifications;
     } catch (e) {

@@ -1,7 +1,11 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-export class MailerUtil extends SESClient {
+import { Injectable } from '@nestjs/common';
+@Injectable()
+export class MailerUtil {
+  private readonly sesClient: SESClient;
+
   constructor() {
-    super({
+    this.sesClient = new SESClient({
       region: process.env.AWS_REGION,
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -9,7 +13,7 @@ export class MailerUtil extends SESClient {
       },
     });
   }
-  createSendEmailCommand(
+  private createSendEmailCommand(
     toAddress: string,
     fromAddress: string,
     subject: string,
@@ -56,10 +60,9 @@ export class MailerUtil extends SESClient {
     );
 
     try {
-      return await this.send(sendEmailCommand);
+      return await this.sesClient.send(sendEmailCommand);
     } catch (e) {
-      console.error(e);
-      return e;
+      throw new Error(`Failed to send email: ${e.message}`);
     }
   }
 }

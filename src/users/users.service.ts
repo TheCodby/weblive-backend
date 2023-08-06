@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { UserUtil } from '../utils/user.util';
 
@@ -10,7 +14,10 @@ export class UsersService {
   ) {}
 
   async getUserByUsername(requesterId: number, username: string) {
-    const user = await this.prisma.user.findUnique({
+    if (!requesterId || !username) {
+      throw new BadRequestException('Invalid input parameters');
+    }
+    const user = await this.prisma.user.findUniqueOrThrow({
       where: {
         username: username,
       },
@@ -32,18 +39,23 @@ export class UsersService {
     });
     const profile = this.prisma.exclude(user, [
       'password',
+      'email',
       'googleId',
       'discordId',
       'last_login',
     ]);
+    const followersCount = await this.users.getFollowersCount(user.id);
     const follow = await this.users.isFollowing(requesterId, profile.id);
-    profile['isFollowing'] = !!follow;
     if (!profile) throw new NotFoundException('User not found');
-    return profile;
+    return {
+      ...profile,
+      isFollowing: !!follow,
+      followers: followersCount,
+    };
   }
   async followUser(followerId: number, userId: number) {
     if (followerId === userId)
-      throw new NotFoundException('You cannot follow yourself');
+      throw new BadRequestException('You cannot follow yourself');
     await this.prisma.follow.create({
       data: {
         followerId: followerId,

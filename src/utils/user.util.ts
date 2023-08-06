@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { PrismaService } from '../database/prisma.service';
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { MailerUtil } from './mailer.util';
 import { render } from '@react-email/render';

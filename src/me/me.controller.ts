@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Patch,
-  Req,
   UseGuards,
   UsePipes,
   Post,
@@ -18,7 +17,7 @@ import {
   ChangePasswordDto,
   changePasswordSchema,
 } from './dto/ChangePassword.dto';
-import { RequestWithUser } from 'src/interfaces/user';
+import { IUser } from 'src/interfaces/user';
 import { UpdateProfileDto, updateProfileSchema } from './dto/UpdateProfile.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileSizeValidator } from '../validation/upload/FileSizeValidator';
@@ -26,6 +25,7 @@ import {
   CompleteAccountDto,
   completeAccountSchema,
 } from './dto/CompleteAccount.dto';
+import { User } from '../decorators/user.decorator';
 
 @Controller('me')
 @UseGuards(AuthGuard)
@@ -33,24 +33,24 @@ export class MeController {
   constructor(private readonly meService: MeService) {}
 
   @Get('profile')
-  getProfile(@Req() request: RequestWithUser) {
-    return this.meService.getProfile(request);
+  getProfile(@User() user: IUser) {
+    return this.meService.getProfile(user.id);
   }
   @Patch('change-password')
-  @UsePipes(new JoiValidationPipe(changePasswordSchema))
   changePassword(
-    @Body() changePasswordDto: ChangePasswordDto,
-    @Req() request: RequestWithUser,
+    @Body(new JoiValidationPipe(changePasswordSchema))
+    changePasswordDto: ChangePasswordDto,
+    @User() user: IUser,
   ) {
-    return this.meService.changePassword(changePasswordDto, request);
+    return this.meService.changePassword(changePasswordDto, user.id);
   }
   @Patch('profile')
-  @UsePipes(new JoiValidationPipe(updateProfileSchema))
   updateProfile(
-    @Body() updateProfileDto: UpdateProfileDto,
-    @Req() request: RequestWithUser,
+    @Body(new JoiValidationPipe(updateProfileSchema))
+    updateProfileDto: UpdateProfileDto,
+    @User() user: IUser,
   ) {
-    return this.meService.updateProfile(updateProfileDto, request);
+    return this.meService.updateProfile(updateProfileDto, user.id);
   }
   @Post('picture')
   @UseInterceptors(FileInterceptor('file'))
@@ -61,28 +61,28 @@ export class MeController {
       }),
     )
     file: Express.Multer.File,
-    @Req() request: RequestWithUser,
+    @User() user: IUser,
   ) {
-    return this.meService.updateProfilePicture(file, request);
+    return this.meService.updateProfilePicture(file, user.id);
   }
   @Post('complete')
-  @UsePipes(new JoiValidationPipe(completeAccountSchema))
   completeAccount(
-    @Req() request: RequestWithUser,
-    @Body() completeAccount: CompleteAccountDto,
+    @User() user: IUser,
+    @Body(new JoiValidationPipe(completeAccountSchema))
+    completeAccount: CompleteAccountDto,
   ) {
-    return this.meService.completeAccount(request, completeAccount);
+    return this.meService.completeAccount(user.id, completeAccount);
   }
   @Get('notifications')
-  getNotifications(@Req() request: RequestWithUser) {
-    return this.meService.getNotifications(+request.user.id);
+  getNotifications(@User() user: IUser) {
+    return this.meService.getNotifications(+user.id);
   }
   @Get('notifications/read')
-  readNotifications(@Req() request: RequestWithUser) {
-    return this.meService.readNotifications(+request.user.id);
+  readNotifications(@User() user: IUser) {
+    return this.meService.readNotifications(+user.id);
   }
   @Post('resend-verification')
-  resendVerification(@Req() req: RequestWithUser) {
-    return this.meService.resendVerificationEmail(req.user.id);
+  resendVerification(@User() user: IUser) {
+    return this.meService.resendVerificationEmail(user.id);
   }
 }

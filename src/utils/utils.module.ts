@@ -15,6 +15,6 @@ import { MailerUtil } from './mailer.util';
     }),
   ],
   providers: [UserUtil, S3Util, NotificationsUtil, RedisCache, MailerUtil],
-  exports: [UserUtil, S3Util, NotificationsUtil, RedisCache, MailerUtil],
+  exports: [UserUtil, S3Util, NotificationsUtil, MailerUtil],
 })
 export class UtilsModule {}

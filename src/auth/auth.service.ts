@@ -3,30 +3,29 @@ import { UserAuthDto } from './dto/user-auth.dto';
 import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt/dist';
-import { User } from 'src/interfaces/user';
+import { IUser } from 'src/interfaces/user';
 import Prisma from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
-import { Request } from 'express';
-import DiscordService from './oauth/discord.service';
-import GoogleService from './oauth/google.service';
 import { UserUtil } from '../utils/user.util';
+import { OauthService, TOauthProviders } from './oauth/oauth.service';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
+    private readonly authProvider: OauthService,
+    private readonly userUtil: UserUtil,
     private readonly prisma: PrismaService,
-    private readonly discordService: DiscordService,
-    private readonly googleService: GoogleService,
-    private readonly user: UserUtil,
   ) {}
+
   private generateJwt(user: Prisma.User) {
     return this.jwtService.sign({
       id: user.id,
       username: user.username,
       picture: user.avatar,
       admin: user.admin,
-    } as User);
+    } as IUser);
   }
+
   async create(createAuthDto: RegisterDto) {
     try {
       const salt = bcrypt.genSaltSync(5);
@@ -39,7 +38,7 @@ export class AuthService {
           completed: true,
         },
       });
-      this.user.sendVerificationEmail(user.id);
+      this.userUtil.sendVerificationEmail(user.id);
       return {
         message: 'Successfully created an account',
       };
@@ -54,6 +53,7 @@ export class AuthService {
       }
     }
   }
+
   async verify(code: string) {
     const user = await this.prisma.user.findUnique({
       where: {
@@ -80,6 +80,7 @@ export class AuthService {
       };
     }
   }
+
   async login(loginAuthDto: UserAuthDto) {
     const user = await this.prisma.user.findUnique({
       where: {
@@ -111,19 +112,9 @@ export class AuthService {
       };
     }
   }
-  async callback(req: Request) {
-    const { code } = req.body;
-    let user: Prisma.User;
-    switch (req.params.provider) {
-      case 'google':
-        user = await this.googleService.login(code);
-        break;
-      case 'discord':
-        user = await this.discordService.login(code);
-        break;
-      default:
-        throw new HttpException('Provider not found', HttpStatus.BAD_REQUEST);
-    }
+
+  async callback(provider: TOauthProviders, code: string) {
+    const user = await this.authProvider.login(provider, code);
     if (!user)
       throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
     const token = this.generateJwt(user);

@@ -1,9 +1,9 @@
-import { Controller, Post, Body, Req, UsePipes, Query } from '@nestjs/common';
+import { Controller, Post, Body, Param, UsePipes, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { registerSchema, RegisterDto } from './dto/register.dto';
 import { UserAuthDto, authSchema } from './dto/user-auth.dto';
 import { JoiValidationPipe } from '../validation/JoiValidationPipe';
-import { RequestWithUser } from '../interfaces/user';
+import { TOauthProviders } from './oauth/oauth.service';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -19,8 +19,11 @@ export class AuthController {
     return this.authService.login(loginAuthDto);
   }
   @Post('callback/:provider')
-  async callback(@Req() req) {
-    return this.authService.callback(req);
+  async callback(
+    @Param('provider') provider: TOauthProviders,
+    @Body('code') code: string,
+  ) {
+    return this.authService.callback(provider, code);
   }
   @Post('verify')
   verify(@Query('code') code: string) {

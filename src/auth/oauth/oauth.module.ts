@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
+import { PrismaModule } from '@/src/database/prisma.module';
+import { OauthService } from './oauth.service';
 import DiscordService from './discord.service';
 import GoogleService from './google.service';
-import { PrismaModule } from '@/src/database/prisma.module';
 
 @Module({
   imports: [PrismaModule],
-  providers: [DiscordService, GoogleService],
-  exports: [DiscordService, GoogleService],
+  providers: [OauthService, DiscordService, GoogleService],
+  exports: [OauthService],
 })
 export class OauthModule {}

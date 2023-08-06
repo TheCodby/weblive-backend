@@ -1,12 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
-import { RequestWithUser, User } from '../interfaces/user';
+import { IUser } from '../interfaces/user';
 import { RoomGateway } from './room.gateway';
 import { PrismaService } from '../database/prisma.service';
 import { UserUtil } from '../utils/user.util';
 import CustomLoggerService from '../logger/logger.service';
-import { MailerUtil } from '../utils/mailer.util';
 
 @Injectable()
 export class RoomsService {
@@ -14,11 +13,10 @@ export class RoomsService {
     private readonly prisma: PrismaService,
     private readonly roomGateway: RoomGateway,
     private readonly users: UserUtil,
-    private readonly mailer: MailerUtil,
   ) {}
   private readonly MAX_ROOMS_PER_PAGE = 10;
   private readonly logger = new CustomLoggerService(RoomsService.name);
-  async create(createRoomDto: CreateRoomDto, request: RequestWithUser) {
+  async create(createRoomDto: CreateRoomDto, userId: number) {
     const { name, password, description, password_protected } = createRoomDto;
     const newRoom = await this.prisma.room.create({
       data: {
@@ -28,7 +26,7 @@ export class RoomsService {
         type: password_protected && password !== '' ? 1 : 0,
         owner: {
           connect: {
-            id: request.user.id,
+            id: userId,
           },
         },
       },
@@ -75,7 +73,7 @@ export class RoomsService {
       pages,
     };
   }
-  async findOne(id: number, user: User) {
+  async findOne(id: number, user: IUser) {
     if (!parseInt(id.toString())) {
       throw new HttpException('Room not found', HttpStatus.NOT_FOUND);
     }
@@ -105,7 +103,7 @@ export class RoomsService {
     }
     return room;
   }
-  async join(id: number, password: string, request: RequestWithUser) {
+  async join(id: number, password: string, userId: number) {
     const room = await this.prisma.room.findUnique({
       where: {
         id: id,
@@ -119,7 +117,7 @@ export class RoomsService {
     }
     const userRoom = await this.prisma.userRoom.findFirst({
       where: {
-        userId: request.user.id,
+        userId: userId,
         roomId: id,
       },
     });
@@ -131,7 +129,7 @@ export class RoomsService {
     }
     await this.prisma.userRoom.create({
       data: {
-        userId: request.user.id,
+        userId: userId,
         roomId: id,
       },
     });

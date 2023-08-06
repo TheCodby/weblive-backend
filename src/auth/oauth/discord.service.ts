@@ -36,30 +36,24 @@ export default class DiscordService implements IOauthProvider {
     });
     return response.json();
   }
-  async createAccount(profile: any) {
-    return await this.prisma.user.upsert({
+
+  async getUser(code: string) {
+    const accessToken = await this.getAccessToken(code);
+    const profile = await this.profile(accessToken);
+    console.log(profile);
+    const user = await this.prisma.user.upsert({
       where: {
         discordId: profile.id,
       },
-      update: {},
+      update: {
+        avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`,
+      },
       create: {
         username: this.users.generateRandomUsername(),
         discordId: profile.id,
         verified: true,
       },
     });
-  }
-  async login(code: string) {
-    const accessToken = await this.getAccessToken(code);
-    const profile = await this.profile(accessToken);
-    const user = await this.prisma.user.findUnique({
-      where: {
-        discordId: profile.id,
-      },
-    });
-    if (!user) {
-      return await this.createAccount(profile);
-    }
     return user;
   }
 }
