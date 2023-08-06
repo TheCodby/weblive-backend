@@ -18,7 +18,7 @@ export class MeService {
   ) {}
 
   async getProfile(userId: number) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUniqueOrThrow({
       where: {
         id: userId,
       },
