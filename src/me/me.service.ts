@@ -8,6 +8,7 @@ import { CompleteAccountDto } from './dto/CompleteAccount.dto';
 import { S3Util } from '../utils/s3.util';
 import { NotificationsUtil } from '../utils/notifications.util';
 import { UserUtil } from '../utils/user.util';
+import { ChangeEmailDto } from './dto/ChangeEmail.dto';
 @Injectable()
 export class MeService {
   constructor(
@@ -220,6 +221,26 @@ export class MeService {
         userId,
       );
       return notificationsNum;
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+  async changeEmail(changePasswordDto: ChangeEmailDto, userId: number) {
+    const email = changePasswordDto.email;
+    try {
+      await this.prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          email: email,
+          verified: false,
+        },
+      });
+      this.user.sendVerificationEmail(userId);
+      return {
+        message: 'Successfully changed email, please verify your email',
+      };
     } catch (e) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }

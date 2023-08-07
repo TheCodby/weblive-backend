@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseFilePipe,
+  Put,
 } from '@nestjs/common';
 import { MeService } from './me.service';
 import { AuthGuard } from '@/src/guards/auth.guard';
@@ -26,6 +27,7 @@ import {
   completeAccountSchema,
 } from './dto/CompleteAccount.dto';
 import { User } from '../decorators/user.decorator';
+import { ChangeEmailDto, changeEmailSchema } from './dto/ChangeEmail.dto';
 
 @Controller('me')
 @UseGuards(AuthGuard)
@@ -39,10 +41,18 @@ export class MeController {
   @Patch('change-password')
   changePassword(
     @Body(new JoiValidationPipe(changePasswordSchema))
-    changePasswordDto: ChangePasswordDto,
+    inputs: ChangePasswordDto,
     @User() user: IUser,
   ) {
-    return this.meService.changePassword(changePasswordDto, user.id);
+    return this.meService.changePassword(inputs, user.id);
+  }
+  @Put('change-email')
+  changeEmail(
+    @Body(new JoiValidationPipe(changeEmailSchema))
+    inputs: ChangeEmailDto,
+    @User() user: IUser,
+  ) {
+    return this.meService.changeEmail(inputs, user.id);
   }
   @Patch('profile')
   updateProfile(
