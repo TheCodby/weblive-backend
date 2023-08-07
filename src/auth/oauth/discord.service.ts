@@ -52,6 +52,7 @@ export default class DiscordService implements IOauthProvider {
         username: this.users.generateRandomUsername(),
         discordId: profile.id,
         verified: true,
+        avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`,
       },
     });
     return user;

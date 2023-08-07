@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto, createRoomSchema } from './dto/create-room.dto';
-import { UpdateRoomDto } from './dto/update-room.dto';
+import { UpdateRoomDto, updateRoomSchema } from './dto/update-room.dto';
 import { IUser } from '../interfaces/user';
 import { AuthGuard } from '../guards/auth.guard';
 import { JoiValidationPipe } from '../validation/JoiValidationPipe';
@@ -24,8 +24,10 @@ export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
   @UseGuards(AuthGuard)
   @Post()
-  @UsePipes(new JoiValidationPipe(createRoomSchema))
-  create(@Body() createRoomDto: CreateRoomDto, @User() user: IUser) {
+  create(
+    @Body(new JoiValidationPipe(createRoomSchema)) createRoomDto: CreateRoomDto,
+    @User() user: IUser,
+  ) {
     return this.roomsService.create(createRoomDto, user.id);
   }
 
@@ -53,7 +55,10 @@ export class RoomsController {
 
   @UseGuards(AuthGuard, RoomOwnerGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRoomDto: UpdateRoomDto) {
+  update(
+    @Param('id') id: string,
+    @Body(new JoiValidationPipe(updateRoomSchema)) updateRoomDto: UpdateRoomDto,
+  ) {
     return this.roomsService.update(+id, updateRoomDto);
   }
 

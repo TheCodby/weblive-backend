@@ -17,7 +17,7 @@ model User{
   admin Boolean @default(false)
   ip String?
   bio String?
-  avatar String @default("default.jpg")
+  avatar String @default("https://weblive-1.s3.us-east-1.amazonaws.com/default.jpg")
   last_login DateTime?
   googleId String? @unique
   discordId String? @unique

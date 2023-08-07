@@ -44,6 +44,9 @@ export class S3Util {
       const response = await this.s3Client.send(command);
       return response;
     } catch (error) {
+      if (error.name === 'NoSuchKey') {
+        return;
+      }
       console.log(error);
       throw new Error('Error removing file');
     }

@@ -45,6 +45,7 @@ export default class GoogleService implements IOauthProvider {
         avatar: profile.picture,
       },
       create: {
+        avatar: profile.picture,
         username: this.users.generateRandomUsername(),
         googleId: profile.sub,
         verified: true,

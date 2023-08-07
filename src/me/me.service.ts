@@ -73,7 +73,7 @@ export class MeService {
   }
   async changePassword(changePasswordDto: ChangePasswordDto, userId: number) {
     try {
-      const userData = await this.prisma.user.findUnique({
+      const userData = await this.prisma.user.findUniqueOrThrow({
         where: {
           id: userId,
         },
@@ -143,7 +143,7 @@ export class MeService {
       'image/jpeg',
       'base64',
     );
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUniqueOrThrow({
       where: {
         id: userId,
       },
@@ -151,20 +151,27 @@ export class MeService {
         avatar: true,
       },
     });
-    if (user.avatar) {
-      await this.s3.removeFile('weblive-1', user.avatar);
+    const image_url = `https://weblive-1.s3.us-east-1.amazonaws.com/${filename}`;
+    if (
+      user.avatar?.startsWith('https://weblive-1.s3.us-east-1.amazonaws.com/')
+    ) {
+      const oldAvatarKey = user.avatar.replace(
+        'https://weblive-1.s3.us-east-1.amazonaws.com/',
+        '',
+      );
+      this.s3.removeFile('weblive-1', oldAvatarKey);
     }
     await this.prisma.user.update({
       where: {
         id: userId,
       },
       data: {
-        avatar: `https://weblive-1.s3.us-east-1.amazonaws.com/${filename}`,
+        avatar: image_url,
       },
     });
     return {
       message: 'Successfully uploaded',
-      image_url: filename,
+      image_url: image_url,
     };
   }
   async completeAccount(
@@ -172,7 +179,7 @@ export class MeService {
     completeAccountInputs: CompleteAccountDto,
   ) {
     try {
-      const user = await this.prisma.user.findUnique({
+      const user = await this.prisma.user.findUniqueOrThrow({
         where: {
           id: userId,
         },
