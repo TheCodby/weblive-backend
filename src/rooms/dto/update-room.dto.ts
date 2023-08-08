@@ -11,7 +11,7 @@ export const updateRoomSchema = Joi.object({
     })
     .when('password_protected', {
       is: false,
-      then: Joi.optional().allow(''),
+      then: Joi.optional().allow('', null),
     }),
   description: Joi.string().optional().allow(''),
   password_protected: Joi.boolean().required(),

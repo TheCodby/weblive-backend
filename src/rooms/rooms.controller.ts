@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   UseGuards,
-  UsePipes,
   Query,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
