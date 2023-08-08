@@ -3,7 +3,7 @@ import * as Joi from 'joi';
 import { CreateRoomDto } from './create-room.dto';
 
 export const updateRoomSchema = Joi.object({
-  name: Joi.string().required,
+  name: Joi.string().required(),
   password: Joi.string()
     .when('password_protected', {
       is: true,
