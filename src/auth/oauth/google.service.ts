@@ -60,7 +60,7 @@ export default class GoogleService implements IOauthProvider {
           id: userId,
         },
         data: {
-          googleId: profile.id,
+          googleId: profile.sub,
         },
       });
     }
