@@ -28,14 +28,17 @@ export class AuthService {
 
   async create(createAuthDto: RegisterDto) {
     try {
-      const salt = bcrypt.genSaltSync(5);
+      const salt = await bcrypt.genSalt(5);
       const hashedPassword = await bcrypt.hash(createAuthDto.password, salt);
       const user = await this.prisma.user.create({
         data: {
           username: createAuthDto.username,
           email: createAuthDto.email,
-          password: hashedPassword,
-          completed: true,
+          credentials: {
+            create: {
+              password: hashedPassword,
+            },
+          },
         },
       });
       this.userUtil.sendVerificationEmail(user.id);
@@ -55,9 +58,9 @@ export class AuthService {
   }
 
   async verify(code: string) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.verificationCode.findUnique({
       where: {
-        verificationCode: code,
+        code: code,
       },
     });
     if (!user) {
@@ -66,12 +69,17 @@ export class AuthService {
         HttpStatus.BAD_REQUEST,
       );
     } else {
+      await this.prisma.verificationCode.delete({
+        where: {
+          code: code,
+        },
+      });
+
       await this.prisma.user.update({
         where: {
-          id: user.id,
+          id: user.userId,
         },
         data: {
-          verificationCode: null,
           verified: true,
         },
       });
@@ -86,13 +94,16 @@ export class AuthService {
       where: {
         username: loginAuthDto.username,
       },
+      include: {
+        credentials: true,
+      },
     });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
     } else {
       const isPasswordValid = await bcrypt.compare(
         loginAuthDto.password,
-        user.password,
+        user.credentials.password,
       );
       if (!isPasswordValid) {
         throw new HttpException(

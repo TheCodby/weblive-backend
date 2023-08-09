@@ -4,11 +4,11 @@ import * as bcrypt from 'bcrypt';
 import { UpdateProfileDto } from './dto/UpdateProfile.dto';
 import { randomBytes, randomUUID } from 'crypto';
 import { PrismaService } from '../database/prisma.service';
-import { CompleteAccountDto } from './dto/CompleteAccount.dto';
 import { S3Util } from '../utils/s3.util';
 import { NotificationsUtil } from '../utils/notifications.util';
 import { UserUtil } from '../utils/user.util';
 import { ChangeEmailDto } from './dto/ChangeEmail.dto';
+import { OauthService, TOauthProviders } from '../auth/oauth/oauth.service';
 @Injectable()
 export class MeService {
   constructor(
@@ -16,6 +16,7 @@ export class MeService {
     private readonly s3: S3Util,
     private readonly notifications: NotificationsUtil,
     private readonly user: UserUtil,
+    private readonly authProvider: OauthService,
   ) {}
 
   async getProfile(userId: number) {
@@ -23,17 +24,7 @@ export class MeService {
       where: {
         id: userId,
       },
-
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        bio: true,
-        avatar: true,
-        created_at: true,
-        admin: true,
-        verified: true,
-        completed: true,
+      include: {
         rooms: {
           select: {
             id: true,
@@ -52,19 +43,8 @@ export class MeService {
     return user;
   }
   async resendVerificationEmail(userId: number) {
-    const user = await this.prisma.user.findUniqueOrThrow({
-      where: {
-        id: userId,
-      },
-    });
-    if (user.id !== userId) {
-      throw new HttpException(
-        'You are not authorized to do this',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
     try {
-      this.user.sendVerificationEmail(user.id);
+      this.user.sendVerificationEmail(userId);
       return {
         message: 'Successfully sent verification email',
       };
@@ -74,9 +54,9 @@ export class MeService {
   }
   async changePassword(changePasswordDto: ChangePasswordDto, userId: number) {
     try {
-      const userData = await this.prisma.user.findUniqueOrThrow({
+      const userCredentials = await this.prisma.credential.findUniqueOrThrow({
         where: {
-          id: userId,
+          userId: userId,
         },
         select: {
           password: true,
@@ -86,7 +66,7 @@ export class MeService {
       const newPassword = changePasswordDto.newPassword;
       const matchedPassword = await bcrypt.compare(
         currentPassword,
-        userData.password,
+        userCredentials.password,
       );
       if (!matchedPassword) {
         throw new HttpException(
@@ -96,9 +76,9 @@ export class MeService {
       }
       const salt = bcrypt.genSaltSync(5);
       const hashedPassword = await bcrypt.hash(newPassword, salt);
-      await this.prisma.user.update({
+      await this.prisma.credential.update({
         where: {
-          id: userId,
+          userId: userId,
         },
         data: {
           password: hashedPassword,
@@ -175,46 +155,6 @@ export class MeService {
       image_url: image_url,
     };
   }
-  async completeAccount(
-    userId: number,
-    completeAccountInputs: CompleteAccountDto,
-  ) {
-    try {
-      const user = await this.prisma.user.findUniqueOrThrow({
-        where: {
-          id: userId,
-        },
-        select: {
-          completed: true,
-        },
-      });
-      if (user.completed) {
-        throw new HttpException(
-          'Account already completed',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      const salt = bcrypt.genSaltSync(5);
-      const hashedPassword = await bcrypt.hash(
-        completeAccountInputs.password,
-        salt,
-      );
-      await this.prisma.user.update({
-        where: {
-          id: userId,
-        },
-        data: {
-          password: hashedPassword,
-          completed: true,
-        },
-      });
-      return {
-        message: 'Successfully completed account',
-      };
-    } catch (e) {
-      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
-    }
-  }
   async getNotifications(userId: number) {
     try {
       const notificationsNum = await this.notifications.getNotificationsNumber(
@@ -253,5 +193,15 @@ export class MeService {
     } catch (e) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
+  }
+  async connect(provider: TOauthProviders, code: string, loggedinId?: number) {
+    const user = await this.authProvider.login(provider, code, loggedinId);
+    console.log(user);
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    }
+    return {
+      message: 'Successfully connected',
+    };
   }
 }

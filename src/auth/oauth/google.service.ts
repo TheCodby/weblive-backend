@@ -27,30 +27,42 @@ export default class GoogleService implements IOauthProvider {
     return data.access_token;
   }
   async profile(accessToken: string) {
-    console.log(accessToken);
     const response = await fetch(
       `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`,
     );
     return response.json();
   }
-  async getUser(code: string) {
+  async getUser(code: string, userId?: number) {
     const accessToken = await this.getAccessToken(code);
     const profile = await this.profile(accessToken);
     console.log(profile);
-    const user = await this.prisma.user.upsert({
-      where: {
-        googleId: profile.sub,
-      },
-      update: {
-        avatar: profile.picture,
-      },
-      create: {
-        avatar: profile.picture,
-        username: this.users.generateRandomUsername(),
-        googleId: profile.sub,
-        verified: true,
-      },
-    });
-    return user;
+    console.log(userId);
+    if (!userId) {
+      return await this.prisma.user.upsert({
+        where: {
+          googleId: profile.sub,
+        },
+        update: {
+          avatar: profile.picture,
+        },
+        create: {
+          avatar: profile.picture,
+          username: this.users.generateRandomUsername(),
+          googleId: profile.sub,
+          verified: true,
+          email: profile.email,
+          loginMethod: 'Social',
+        },
+      });
+    } else {
+      return await this.prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          googleId: profile.id,
+        },
+      });
+    }
   }
 }

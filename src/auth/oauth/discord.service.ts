@@ -37,24 +37,36 @@ export default class DiscordService implements IOauthProvider {
     return response.json();
   }
 
-  async getUser(code: string) {
+  async getUser(code: string, userId?: number) {
     const accessToken = await this.getAccessToken(code);
     const profile = await this.profile(accessToken);
-    console.log(profile);
-    const user = await this.prisma.user.upsert({
-      where: {
-        discordId: profile.id,
-      },
-      update: {
-        avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`,
-      },
-      create: {
-        username: this.users.generateRandomUsername(),
-        discordId: profile.id,
-        verified: true,
-        avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`,
-      },
-    });
-    return user;
+    console.log(userId);
+    if (!userId) {
+      return await this.prisma.user.upsert({
+        where: {
+          discordId: profile.id,
+        },
+        update: {
+          avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`,
+        },
+        create: {
+          username: this.users.generateRandomUsername(),
+          discordId: profile.id,
+          verified: true,
+          avatar: `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`,
+          email: profile.email,
+          loginMethod: 'Social',
+        },
+      });
+    } else {
+      return await this.prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          discordId: profile.id,
+        },
+      });
+    }
   }
 }

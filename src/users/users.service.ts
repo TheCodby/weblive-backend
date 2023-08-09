@@ -38,7 +38,6 @@ export class UsersService {
       },
     });
     const profile = this.prisma.exclude(user, [
-      'password',
       'email',
       'googleId',
       'discordId',

@@ -4,7 +4,7 @@ import {
   Get,
   Patch,
   UseGuards,
-  UsePipes,
+  Param,
   Post,
   UseInterceptors,
   UploadedFile,
@@ -22,12 +22,10 @@ import { IUser } from 'src/interfaces/user';
 import { UpdateProfileDto, updateProfileSchema } from './dto/UpdateProfile.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileSizeValidator } from '../validation/upload/FileSizeValidator';
-import {
-  CompleteAccountDto,
-  completeAccountSchema,
-} from './dto/CompleteAccount.dto';
+
 import { User } from '../decorators/user.decorator';
 import { ChangeEmailDto, changeEmailSchema } from './dto/ChangeEmail.dto';
+import { TOauthProviders } from '../auth/oauth/oauth.service';
 
 @Controller('me')
 @UseGuards(AuthGuard)
@@ -75,14 +73,6 @@ export class MeController {
   ) {
     return this.meService.updateProfilePicture(file, user.id);
   }
-  @Post('complete')
-  completeAccount(
-    @User() user: IUser,
-    @Body(new JoiValidationPipe(completeAccountSchema))
-    completeAccount: CompleteAccountDto,
-  ) {
-    return this.meService.completeAccount(user.id, completeAccount);
-  }
   @Get('notifications')
   getNotifications(@User() user: IUser) {
     return this.meService.getNotifications(+user.id);
@@ -94,5 +84,13 @@ export class MeController {
   @Post('resend-verification')
   resendVerification(@User() user: IUser) {
     return this.meService.resendVerificationEmail(user.id);
+  }
+  @Post('connect/:provider')
+  async callback(
+    @Param('provider') provider: TOauthProviders,
+    @Body('code') code: string,
+    @User() user: IUser,
+  ) {
+    return this.meService.connect(provider, code, +user.id);
   }
 }

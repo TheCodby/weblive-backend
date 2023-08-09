@@ -53,12 +53,19 @@ export class UserUtil {
         throw new Error('User already verified');
       } else {
         const code = randomBytes(20).toString('hex');
-        await this.prisma.user.update({
+        await this.prisma.verificationCode.deleteMany({
           where: {
-            email: user.email,
+            userId: userId,
           },
+        });
+        await this.prisma.verificationCode.create({
           data: {
-            verificationCode: code,
+            code: code,
+            user: {
+              connect: {
+                id: user.id,
+              },
+            },
           },
         });
         this.mailer.sendMail(

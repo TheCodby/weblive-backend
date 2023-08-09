@@ -4,6 +4,8 @@ import { registerSchema, RegisterDto } from './dto/register.dto';
 import { UserAuthDto, authSchema } from './dto/user-auth.dto';
 import { JoiValidationPipe } from '../validation/JoiValidationPipe';
 import { TOauthProviders } from './oauth/oauth.service';
+import { User } from '../decorators/user.decorator';
+import { IUser } from '../interfaces/user';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

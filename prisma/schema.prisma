@@ -8,26 +8,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum LoginMethod {
+  Normal
+  Social
+}
+
 model User{
   id Int @id @default(autoincrement())
-  username String @unique
-  email String? @unique
-  verificationCode String? @unique
-  password String?
+  username String @unique 
+  email String @unique
   admin Boolean @default(false)
-  ip String?
   bio String?
   avatar String @default("https://weblive-1.s3.us-east-1.amazonaws.com/default.jpg")
   last_login DateTime?
   googleId String? @unique
   discordId String? @unique
-  rooms Room[]
   created_at DateTime @default(now())
   following Follow[] @relation("follower")
   follower Follow[] @relation("following")
-  joinedRooms UserRoom[]
   verified Boolean @default(false)
-  completed Boolean @default(false)
+  banned Boolean @default(false)
+  loginMethod LoginMethod @default(Normal)
+
+  credentials Credential?
+  verificationCode verificationCode?
+  rooms Room[]
+  joinedRooms UserRoom[]
+
+  @@unique([id, username])
+}
+model Credential{
+  user User @relation(fields: [userId, username], references: [id, username])
+  userId Int @id
+  username String
+  password String
+  created_at DateTime @default(now())
+
+  @@unique([userId, username])
+}
+model verificationCode{
+  id Int @id @default(autoincrement())
+  code String @unique
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id])
+  created_at DateTime @default(now())
 }
 model Room{
   id Int @id @default(autoincrement())
@@ -46,7 +70,7 @@ model UserRoom{
   id Int @id @default(autoincrement())
   userId Int
   roomId Int
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
   created_at DateTime @default(now())
 }
