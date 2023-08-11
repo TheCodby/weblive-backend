@@ -16,6 +16,7 @@ import * as React from 'react';
 interface VercelInviteUserEmailProps {
   username?: string;
   code?: string;
+  language?: string;
 }
 
 const baseUrl = process.env.ORIGIN;
@@ -23,6 +24,7 @@ const baseUrl = process.env.ORIGIN;
 export const Verification: React.FC<Readonly<VercelInviteUserEmailProps>> = ({
   username = 'zenorocha',
   code = `${baseUrl}/static/vercel-user.png`,
+  language = 'en',
 }: VercelInviteUserEmailProps) => {
   const previewText = `Hello ${username}, please verify your email address`;
 
@@ -49,7 +51,7 @@ export const Verification: React.FC<Readonly<VercelInviteUserEmailProps>> = ({
                 pX={20}
                 pY={12}
                 className="bg-[#000000] rounded text-white text-[12px] font-semibold no-underline text-center"
-                href={`${baseUrl}/verify?code=${code}`}
+                href={`${baseUrl}/${language}/verify?code=${code}`}
               >
                 Verify Email Address
               </Button>
@@ -58,9 +60,9 @@ export const Verification: React.FC<Readonly<VercelInviteUserEmailProps>> = ({
               or copy and paste this URL into your browser:{' '}
               <Link
                 className="text-[#000000] text-[14px] leading-[24px] underline"
-                href={`${baseUrl}/verify?code=${code}`}
+                href={`${baseUrl}/${language}/verify?code=${code}`}
               >
-                {`${baseUrl}/verify?code=${code}`}
+                {`${baseUrl}/${language}/verify?code=${code}`}
               </Link>
             </Text>
           </Container>

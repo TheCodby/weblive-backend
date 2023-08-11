@@ -124,8 +124,12 @@ export class AuthService {
     }
   }
 
-  async callback(provider: TOauthProviders, code: string) {
-    const user = await this.authProvider.login(provider, code);
+  async callback(provider: TOauthProviders, code: string, language: string) {
+    const user = await this.authProvider.login(
+      provider,
+      code,
+      `${process.env.ORIGIN}/${language}/oauth/callback/${provider}`,
+    );
     if (!user)
       throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
     const token = this.generateJwt(user);

@@ -10,6 +10,7 @@ import {
   UploadedFile,
   ParseFilePipe,
   Put,
+  Query,
 } from '@nestjs/common';
 import { MeService } from './me.service';
 import { AuthGuard } from '@/src/guards/auth.guard';
@@ -82,15 +83,16 @@ export class MeController {
     return this.meService.readNotifications(+user.id);
   }
   @Post('resend-verification')
-  resendVerification(@User() user: IUser) {
-    return this.meService.resendVerificationEmail(user.id);
+  resendVerification(@User() user: IUser, @Query('locale') language: string) {
+    return this.meService.resendVerificationEmail(user.id, language);
   }
   @Post('connect/:provider')
   async callback(
     @Param('provider') provider: TOauthProviders,
     @Body('code') code: string,
     @User() user: IUser,
+    @Query('locale') language: string,
   ) {
-    return this.meService.connect(provider, code, +user.id);
+    return this.meService.connect(provider, code, language, +user.id);
   }
 }

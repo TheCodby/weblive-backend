@@ -42,9 +42,9 @@ export class MeService {
     });
     return user;
   }
-  async resendVerificationEmail(userId: number) {
+  async resendVerificationEmail(userId: number, language: string) {
     try {
-      this.user.sendVerificationEmail(userId);
+      this.user.sendVerificationEmail(userId, language);
       return {
         message: 'Successfully sent verification email',
       };
@@ -194,9 +194,18 @@ export class MeService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-  async connect(provider: TOauthProviders, code: string, loggedinId?: number) {
-    const user = await this.authProvider.login(provider, code, loggedinId);
-    console.log(user);
+  async connect(
+    provider: TOauthProviders,
+    code: string,
+    language: string,
+    loggedinId?: number,
+  ) {
+    const user = await this.authProvider.login(
+      provider,
+      code,
+      `${process.env.ORIGIN}/${language}/oauth/connect/${provider}`,
+      loggedinId,
+    );
     if (!user) {
       throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
     }

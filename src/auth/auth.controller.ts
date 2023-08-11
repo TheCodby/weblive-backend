@@ -4,8 +4,6 @@ import { registerSchema, RegisterDto } from './dto/register.dto';
 import { UserAuthDto, authSchema } from './dto/user-auth.dto';
 import { JoiValidationPipe } from '../validation/JoiValidationPipe';
 import { TOauthProviders } from './oauth/oauth.service';
-import { User } from '../decorators/user.decorator';
-import { IUser } from '../interfaces/user';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -24,8 +22,9 @@ export class AuthController {
   async callback(
     @Param('provider') provider: TOauthProviders,
     @Body('code') code: string,
+    @Query('locale') language: string,
   ) {
-    return this.authService.callback(provider, code);
+    return this.authService.callback(provider, code, language);
   }
   @Post('verify')
   verify(@Query('code') code: string) {

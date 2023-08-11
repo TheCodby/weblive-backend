@@ -40,7 +40,7 @@ export class UserUtil {
     });
     return followers.map((follower) => follower.followerId);
   }
-  async sendVerificationEmail(userId: number) {
+  async sendVerificationEmail(userId: number, language?: string) {
     try {
       const user = await this.prisma.user.findUnique({
         where: {
@@ -75,6 +75,7 @@ export class UserUtil {
             Verification({
               username: user.username,
               code: code,
+              language: language,
             }),
           ),
         );

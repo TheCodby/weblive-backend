@@ -10,14 +10,19 @@ export class OauthService {
     private readonly googleService: GoogleService,
   ) {}
 
-  async login(provider: TOauthProviders, code: string, userId?: number) {
+  async login(
+    provider: TOauthProviders,
+    code: string,
+    redirectUri: string,
+    userId?: number,
+  ) {
     let user: Prisma.User;
     switch (provider) {
       case 'discord':
-        user = await this.discordService.getUser(code, userId);
+        user = await this.discordService.getUser(code, redirectUri, userId);
         break;
       case 'google':
-        user = await this.googleService.getUser(code, userId);
+        user = await this.googleService.getUser(code, redirectUri, userId);
         break;
       default:
         return false;
