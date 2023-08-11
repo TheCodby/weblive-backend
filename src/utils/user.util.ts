@@ -5,6 +5,7 @@ import { randomBytes } from 'crypto';
 import { MailerUtil } from './mailer.util';
 import { render } from '@react-email/render';
 import Verification from '../email-templates/verification';
+import { TLocale } from '../types/main';
 
 @Injectable()
 export class UserUtil {
@@ -40,7 +41,7 @@ export class UserUtil {
     });
     return followers.map((follower) => follower.followerId);
   }
-  async sendVerificationEmail(userId: number, language?: string) {
+  async sendVerificationEmail(userId: number, language?: TLocale) {
     try {
       const user = await this.prisma.user.findUnique({
         where: {

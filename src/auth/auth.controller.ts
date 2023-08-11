@@ -4,6 +4,7 @@ import { registerSchema, RegisterDto } from './dto/register.dto';
 import { UserAuthDto, authSchema } from './dto/user-auth.dto';
 import { JoiValidationPipe } from '../validation/JoiValidationPipe';
 import { TOauthProviders } from './oauth/oauth.service';
+import { TLocale } from '../types/main';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -22,7 +23,7 @@ export class AuthController {
   async callback(
     @Param('provider') provider: TOauthProviders,
     @Body('code') code: string,
-    @Query('locale') language: string,
+    @Query('locale') language: TLocale,
   ) {
     return this.authService.callback(provider, code, language);
   }

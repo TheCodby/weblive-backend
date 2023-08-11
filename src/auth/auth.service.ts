@@ -8,6 +8,7 @@ import Prisma from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { UserUtil } from '../utils/user.util';
 import { OauthService, TOauthProviders } from './oauth/oauth.service';
+import { TLocale } from '../types/main';
 @Injectable()
 export class AuthService {
   constructor(
@@ -34,6 +35,7 @@ export class AuthService {
         data: {
           username: createAuthDto.username,
           email: createAuthDto.email,
+          locale: createAuthDto.locale,
           credentials: {
             create: {
               password: hashedPassword,
@@ -41,7 +43,7 @@ export class AuthService {
           },
         },
       });
-      this.userUtil.sendVerificationEmail(user.id);
+      this.userUtil.sendVerificationEmail(user.id, createAuthDto.locale);
       return {
         message: 'Successfully created an account',
       };
@@ -124,7 +126,7 @@ export class AuthService {
     }
   }
 
-  async callback(provider: TOauthProviders, code: string, language: string) {
+  async callback(provider: TOauthProviders, code: string, language: TLocale) {
     const user = await this.authProvider.login(
       provider,
       code,

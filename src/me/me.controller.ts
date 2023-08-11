@@ -27,6 +27,7 @@ import { FileSizeValidator } from '../validation/upload/FileSizeValidator';
 import { User } from '../decorators/user.decorator';
 import { ChangeEmailDto, changeEmailSchema } from './dto/ChangeEmail.dto';
 import { TOauthProviders } from '../auth/oauth/oauth.service';
+import { TLocale } from '../types/main';
 
 @Controller('me')
 @UseGuards(AuthGuard)
@@ -83,7 +84,7 @@ export class MeController {
     return this.meService.readNotifications(+user.id);
   }
   @Post('resend-verification')
-  resendVerification(@User() user: IUser, @Query('locale') language: string) {
+  resendVerification(@User() user: IUser, @Query('locale') language: TLocale) {
     return this.meService.resendVerificationEmail(user.id, language);
   }
   @Post('connect/:provider')

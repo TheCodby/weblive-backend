@@ -13,6 +13,10 @@ enum LoginMethod {
   Social
 }
 
+enum Locale {
+  en
+  ar
+}
 model User{
   id Int @id @default(autoincrement())
   username String @unique 
@@ -28,8 +32,9 @@ model User{
   follower Follow[] @relation("following")
   verified Boolean @default(false)
   banned Boolean @default(false)
-  loginMethod LoginMethod @default(Normal)
+  locale Locale @default(en)
 
+  loginMethod LoginMethod @default(Normal)
   credentials Credential?
   verificationCode verificationCode?
   rooms Room[]

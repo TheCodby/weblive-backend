@@ -9,6 +9,7 @@ import { NotificationsUtil } from '../utils/notifications.util';
 import { UserUtil } from '../utils/user.util';
 import { ChangeEmailDto } from './dto/ChangeEmail.dto';
 import { OauthService, TOauthProviders } from '../auth/oauth/oauth.service';
+import { TLocale } from '../types/main';
 @Injectable()
 export class MeService {
   constructor(
@@ -42,7 +43,7 @@ export class MeService {
     });
     return user;
   }
-  async resendVerificationEmail(userId: number, language: string) {
+  async resendVerificationEmail(userId: number, language: TLocale) {
     try {
       this.user.sendVerificationEmail(userId, language);
       return {
