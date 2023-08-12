@@ -37,8 +37,14 @@ export class RoomsService {
     };
   }
 
-  async findAll(page: number) {
+  async findAll(page: number, search: string) {
     const rooms = await this.prisma.room.findMany({
+      where: {
+        name: {
+          contains: search,
+          mode: 'insensitive',
+        },
+      },
       select: {
         id: true,
         name: true,

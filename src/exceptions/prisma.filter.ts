@@ -9,7 +9,11 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const code = exception.code;
     if (code === 'P2002') {
       return response.status(409).json({
-        message: `Duplicate value for field ${exception.meta.target}`,
+        message: `Duplicate value for ${exception.meta.target}`,
+      });
+    } else if (code === 'P2000') {
+      return response.status(403).json({
+        message: `The provided value for the column is too long for the column's type. Column: ${exception.meta.column_name}`,
       });
     } else if (code === 'P2025') {
       return response.status(404).json({

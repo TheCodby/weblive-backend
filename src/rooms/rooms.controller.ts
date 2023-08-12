@@ -42,8 +42,8 @@ export class RoomsController {
 
   @Get()
   @UseGuards()
-  findAll(@Query('page') page = 1) {
-    return this.roomsService.findAll(page);
+  findAll(@Query('page') page = 1, @Query('search') search = '') {
+    return this.roomsService.findAll(page, search);
   }
 
   @UseGuards(AuthGuard)
