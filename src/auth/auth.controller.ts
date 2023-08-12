@@ -25,7 +25,7 @@ export class AuthController {
     @Body('code') code: string,
     @Query('locale') language: TLocale,
   ) {
-    return this.authService.callback(provider, code, language);
+    return this.authService.oauthLogin(provider, code, language);
   }
   @Post('verify')
   verify(@Query('code') code: string) {

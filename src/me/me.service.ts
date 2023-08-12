@@ -195,7 +195,7 @@ export class MeService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-  async connect(
+  async oauthConnect(
     provider: TOauthProviders,
     code: string,
     language: string,

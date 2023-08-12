@@ -94,6 +94,6 @@ export class MeController {
     @User() user: IUser,
     @Query('locale') language: string,
   ) {
-    return this.meService.connect(provider, code, language, +user.id);
+    return this.meService.oauthConnect(provider, code, language, +user.id);
   }
 }

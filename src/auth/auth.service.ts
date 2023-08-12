@@ -126,7 +126,7 @@ export class AuthService {
     }
   }
 
-  async callback(provider: TOauthProviders, code: string, language: TLocale) {
+  async oauthLogin(provider: TOauthProviders, code: string, language: TLocale) {
     const user = await this.authProvider.login(
       provider,
       code,
