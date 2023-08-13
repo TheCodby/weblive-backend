@@ -38,10 +38,9 @@ export class UsersService {
         },
       },
     });
-    if (!user.public) {
-      if (user.id !== requesterId) {
-        throw new ForbiddenException('User profile is private');
-      }
+    if (!user.public && user.id !== requesterId) {
+      // Check if user is public or if requester is the same user
+      throw new ForbiddenException('User profile is private');
     }
     const profile = this.prisma.exclude(user, [
       'email',
