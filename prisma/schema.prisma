@@ -33,6 +33,7 @@ model User{
   verified Boolean @default(false)
   banned Boolean @default(false)
   locale Locale @default(en)
+  public Boolean @default(true)
 
   loginMethod LoginMethod @default(Normal)
   credentials Credential?

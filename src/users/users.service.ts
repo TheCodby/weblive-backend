@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { UserUtil } from '../utils/user.util';
@@ -37,6 +38,11 @@ export class UsersService {
         },
       },
     });
+    if (!user.public) {
+      if (user.id !== requesterId) {
+        throw new ForbiddenException('User profile is private');
+      }
+    }
     const profile = this.prisma.exclude(user, [
       'email',
       'googleId',

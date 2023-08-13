@@ -186,6 +186,34 @@ export class MeService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
+  async toggleVisibility(userId: number) {
+    try {
+      const user = await this.prisma.user.findUniqueOrThrow({
+        where: {
+          id: userId,
+        },
+        select: {
+          public: true,
+        },
+      });
+      const isPublic = !user.public;
+      await this.prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          public: isPublic,
+        },
+      });
+      return {
+        message: 'Your profile is now ' + (isPublic ? 'public' : 'private'),
+        public: isPublic,
+      };
+    } catch (e) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
   async oauthConnect(
     provider: TOauthProviders,
     code: string,

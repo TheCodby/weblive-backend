@@ -56,6 +56,11 @@ export class MeController {
   ) {
     return this.meService.changePassword(inputs, user.id);
   }
+  @Post('profile-visibility')
+  @UseGuards(AuthGuard)
+  toggleVisibility(@User() user: IUser) {
+    return this.meService.toggleVisibility(user.id);
+  }
   @Put('change-email')
   @UseGuards(AuthGuard)
   changeEmail(
