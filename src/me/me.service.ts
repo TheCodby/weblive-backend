@@ -157,16 +157,6 @@ export class MeService {
       image_url: image_url,
     };
   }
-  async getNotifications(userId: number) {
-    try {
-      const notificationsNum = await this.notifications.getNotificationsNumber(
-        userId,
-      );
-      return notificationsNum;
-    } catch (e) {
-      return 0;
-    }
-  }
   async changeEmail(changePasswordDto: ChangeEmailDto, userId: number) {
     const email = changePasswordDto.email;
     try {
@@ -187,7 +177,7 @@ export class MeService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-  async fetchNotifications(userId: number) {
+  async getNotifications(userId: number) {
     try {
       const notifications = await this.notifications.getNotifications(userId);
       await this.notifications.clearNotifications(userId);

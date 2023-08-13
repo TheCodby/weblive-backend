@@ -116,6 +116,7 @@ export class NotificationsUtil {
     return client;
   }
   pushNotificationToClient(userId: number, notification: INotif): void {
+    if (!this.NOTIFICATION_CLIENTS.has(userId)) return;
     const client = this.NOTIFICATION_CLIENTS.get(userId);
     client?.next({
       notifications: [notification],

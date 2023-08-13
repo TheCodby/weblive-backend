@@ -98,7 +98,7 @@ export class MeController {
       .setHeader('Access-Control-Allow-Origin', process.env.ORIGIN)
       .setHeader('Content-Type', 'text/event-stream');
     const userId = +user.id;
-    const initialNotifications = await this.meService.fetchNotifications(
+    const initialNotifications = await this.meService.getNotifications(
       +user.id,
     );
     const observer: Observer<object> = {
