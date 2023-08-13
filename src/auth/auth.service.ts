@@ -9,6 +9,7 @@ import { PrismaService } from '../database/prisma.service';
 import { UserUtil } from '../utils/user.util';
 import { OauthService, TOauthProviders } from './oauth/oauth.service';
 import { TLocale } from '../types/main';
+import { Response } from 'express';
 @Injectable()
 export class AuthService {
   constructor(
@@ -91,7 +92,7 @@ export class AuthService {
     }
   }
 
-  async login(loginAuthDto: UserAuthDto) {
+  async login(loginAuthDto: UserAuthDto, res: Response) {
     const user = await this.prisma.user.findUnique({
       where: {
         username: loginAuthDto.username,
@@ -114,19 +115,31 @@ export class AuthService {
         );
       }
       const token = this.generateJwt(user);
-      return {
-        message: 'Successfully logged in',
-        user: {
-          id: user.id,
-          username: user.username,
-          picture: user.avatar,
-        },
-        token: token,
-      };
+      res
+        .cookie('token', token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          expires: new Date(Date.now() + 1 * 24 * 60 * 1000),
+        })
+        .send({
+          message: 'Successfully logged in',
+          user: {
+            id: user.id,
+            username: user.username,
+            picture: user.avatar,
+          },
+          token: token,
+        });
     }
   }
 
-  async oauthLogin(provider: TOauthProviders, code: string, language: TLocale) {
+  async oauthLogin(
+    provider: TOauthProviders,
+    code: string,
+    language: TLocale,
+    res: Response,
+  ) {
     const user = await this.authProvider.login(
       provider,
       code,
@@ -135,14 +148,25 @@ export class AuthService {
     if (!user)
       throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
     const token = this.generateJwt(user);
-    return {
-      message: 'Successfully logged in',
-      user: {
-        id: user.id,
-        username: user.username,
-        picture: user.avatar,
-      },
-      token: token,
-    };
+    res.cookie('token', token, {
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+    });
+    res
+      .cookie('token', token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        expires: new Date(Date.now() + 1 * 24 * 60 * 1000),
+      })
+      .send({
+        message: 'Successfully logged in',
+        user: {
+          id: user.id,
+          username: user.username,
+          picture: user.avatar,
+        },
+        token: token,
+      });
   }
 }

@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { INotif } from '../interfaces/notification';
 import { RedisCache } from './cache.util';
+import { Observer } from 'rxjs';
 
 @Injectable()
 export class NotificationsUtil {
   constructor(private readonly cache: RedisCache) {}
   // MAX NOTIFICATIONS PER USER
   private readonly MAX_NOTIFICATIONS = 50;
+  private readonly NOTIFICATION_CLIENTS: Map<number, Observer<object>> =
+    new Map();
   /**
    * Pushes a notification to a specific user's notification list in RedisCache.
    * @param userId The ID of the user.
@@ -27,6 +30,7 @@ export class NotificationsUtil {
         Date.now(),
         JSON.stringify(notification),
       );
+      this.pushNotificationToClient(userId, notification);
     } catch (err) {
       console.log(err);
     }
@@ -96,5 +100,25 @@ export class NotificationsUtil {
       console.log(err);
       return 0;
     }
+  }
+  getNotificationClients(): Observer<object>[] {
+    const clients = Array.from(this.NOTIFICATION_CLIENTS.values());
+    return clients;
+  }
+  addNotificationClient(userId: number, client: Observer<object>): void {
+    this.NOTIFICATION_CLIENTS.set(userId, client);
+  }
+  removeNotificationClient(userId: number): void {
+    this.NOTIFICATION_CLIENTS.delete(userId);
+  }
+  async getNotificationClient(userId: number): Promise<Observer<object>> {
+    const client = this.NOTIFICATION_CLIENTS.get(userId);
+    return client;
+  }
+  pushNotificationToClient(userId: number, notification: INotif): void {
+    const client = this.NOTIFICATION_CLIENTS.get(userId);
+    client?.next({
+      notifications: [notification],
+    });
   }
 }

@@ -10,6 +10,7 @@ import { UserUtil } from '../utils/user.util';
 import { ChangeEmailDto } from './dto/ChangeEmail.dto';
 import { OauthService, TOauthProviders } from '../auth/oauth/oauth.service';
 import { TLocale } from '../types/main';
+import { Response } from 'express';
 @Injectable()
 export class MeService {
   constructor(
@@ -163,7 +164,7 @@ export class MeService {
       );
       return notificationsNum;
     } catch (e) {
-      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+      return 0;
     }
   }
   async changeEmail(changePasswordDto: ChangeEmailDto, userId: number) {
@@ -186,7 +187,7 @@ export class MeService {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }
   }
-  async readNotifications(userId: number) {
+  async fetchNotifications(userId: number) {
     try {
       const notifications = await this.notifications.getNotifications(userId);
       await this.notifications.clearNotifications(userId);
