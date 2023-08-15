@@ -8,12 +8,13 @@ import { RequestWithUser } from '../interfaces/user';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
   @Get(':username')
-  async getUserByUsername(
+  async getUserProfile(
     @Param('username') username: string,
     @Req() req: RequestWithUser,
   ) {
-    return await this.usersService.getUserByUsername(req.user.id, username);
+    return await this.usersService.getUserProfile(+req.user.id, username);
   }
+
   @Post(':userId/follow')
   async followUser(
     @Param('userId') userId: number,
