@@ -12,6 +12,7 @@ import { TLocale } from '../types/main';
 import { Response } from 'express';
 @Injectable()
 export class AuthService {
+  private readonly TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 1; // 1 day
   constructor(
     private readonly jwtService: JwtService,
     private readonly authProvider: OauthService,
@@ -20,12 +21,15 @@ export class AuthService {
   ) {}
 
   private generateJwt(user: Prisma.User) {
-    return this.jwtService.sign({
-      id: user.id,
-      username: user.username,
-      picture: user.avatar,
-      admin: user.admin,
-    } as IUser);
+    return this.jwtService.sign(
+      {
+        id: user.id,
+        username: user.username,
+        picture: user.avatar,
+        admin: user.admin,
+      } as IUser,
+      { expiresIn: '1d' },
+    );
   }
 
   async create(createAuthDto: RegisterDto) {
@@ -120,7 +124,7 @@ export class AuthService {
           httpOnly: true,
           secure: false,
           sameSite: 'lax',
-          expires: new Date(Date.now() + 1 * 24 * 60 * 1000),
+          expires: new Date(Date.now() + this.TOKEN_EXPIRATION), // 1 day
         })
         .send({
           message: 'Successfully logged in',
@@ -148,16 +152,12 @@ export class AuthService {
     if (!user)
       throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
     const token = this.generateJwt(user);
-    res.cookie('token', token, {
-      httpOnly: true,
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-    });
     res
       .cookie('token', token, {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
-        expires: new Date(Date.now() + 1 * 24 * 60 * 1000),
+        expires: new Date(Date.now() + this.TOKEN_EXPIRATION), // 1 day
       })
       .send({
         message: 'Successfully logged in',
