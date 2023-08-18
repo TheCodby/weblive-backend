@@ -55,11 +55,20 @@ export class AuthService {
     } catch (e) {
       if (e.code === 'P2002') {
         throw new HttpException(
-          'Username already exists',
+          {
+            message: `${
+              e.meta.target[0].charAt(0).toUpperCase() +
+              e.meta.target[0].slice(1)
+            } already exists`,
+            field: e.meta.target[0],
+          },
           HttpStatus.BAD_REQUEST,
         );
       } else {
-        throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          `Internal server error`,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }

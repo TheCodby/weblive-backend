@@ -9,7 +9,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const code = exception.code;
     if (code === 'P2002') {
       return response.status(409).json({
-        message: `Duplicate value for ${exception.meta.target}`,
+        message: `${exception.meta.target} already exists`,
       });
     } else if (code === 'P2000') {
       return response.status(403).json({

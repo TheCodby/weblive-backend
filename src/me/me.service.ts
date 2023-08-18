@@ -48,7 +48,7 @@ export class MeService {
     try {
       this.user.sendVerificationEmail(userId, language);
       return {
-        message: 'Successfully sent verification email',
+        message: 'Successfully sent verification email.',
       };
     } catch (e) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
@@ -153,7 +153,7 @@ export class MeService {
       },
     });
     return {
-      message: 'Successfully uploaded',
+      message: 'Successfully uploaded the profile picture.',
       image_url: image_url,
     };
   }

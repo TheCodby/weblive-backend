@@ -44,7 +44,7 @@ model User{
   @@unique([id, username])
 }
 model Credential{
-  user User @relation(fields: [userId, username], references: [id, username])
+  user User @relation(fields: [userId, username], references: [id, username], onDelete: Cascade, onUpdate: Cascade)
   userId Int @id
   username String
   password String
@@ -56,7 +56,7 @@ model verificationCode{
   id Int @id @default(autoincrement())
   code String @unique
   userId Int @unique
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   created_at DateTime @default(now())
 }
 model Room{
