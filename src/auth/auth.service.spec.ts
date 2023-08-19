@@ -22,7 +22,7 @@ describe('AuthService', () => {
     send: jest.fn().mockReturnThis(), // Chainable
   } as unknown as Response;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         PrismaModule,
@@ -42,7 +42,7 @@ describe('AuthService', () => {
     service = module.get<AuthService>(AuthService);
     prisma = module.get<PrismaService>(PrismaService);
   });
-  describe('create', () => {
+  describe('Signup', () => {
     it('should register a user successfully', async () => {
       const mockRegisterDto: RegisterDto = {
         username: userTestName,
@@ -52,24 +52,31 @@ describe('AuthService', () => {
       };
       const registerResponse = await service.create(mockRegisterDto);
       expect(registerResponse).toBeDefined();
-      // Add more assertions as needed
+    });
+    it('should fail to register if username already exists', async () => {
+      const mockRegisterDto: RegisterDto = {
+        username: userTestName,
+        email: 'vdfdvfd@fsdfsfd.com',
+        locale: 'en',
+        password: 'test',
+      };
+      await expect(service.create(mockRegisterDto)).rejects.toThrow(
+        new HttpException('Username already exists', HttpStatus.BAD_REQUEST),
+      );
+    });
+    it('should fail to register if email already exists', async () => {
+      const mockRegisterDto: RegisterDto = {
+        username: 'testofgbgf44',
+        email: userTestEmail,
+        locale: 'en',
+        password: 'test',
+      };
+      await expect(service.create(mockRegisterDto)).rejects.toThrow(
+        new HttpException('Email already exists', HttpStatus.BAD_REQUEST),
+      );
     });
   });
-  it('should fail to register if email already exists', async () => {
-    const mockRegisterDto: RegisterDto = {
-      username: 'testofgbgf44',
-      email: userTestEmail,
-      locale: 'en',
-      password: 'test',
-    };
-
-    // Simulate Prisma error for unique constraint on email
-
-    await expect(service.create(mockRegisterDto)).rejects.toThrow(
-      new HttpException('Email already exists', HttpStatus.BAD_REQUEST),
-    );
-  });
-  describe('login', () => {
+  describe('Login', () => {
     it('should fail to login with wrong password', async () => {
       const mockLoginDto: UserAuthDto = {
         username: userTestName,
@@ -104,5 +111,4 @@ describe('AuthService', () => {
       },
     });
   });
-  // Add more describe blocks for other methods like oauthLogin, etc.
 });
