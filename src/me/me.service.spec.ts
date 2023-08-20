@@ -16,7 +16,7 @@ describe('MeService', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [UtilsModule, OauthModule],
-      providers: [MeService, PrismaService /*, Other dependencies */],
+      providers: [MeService, PrismaService],
     }).compile();
 
     service = module.get<MeService>(MeService);
